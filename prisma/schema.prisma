@@ -74,6 +74,7 @@ model CareEvent {
   lat       Float?
   lon       Float?
   createdAt DateTime @default(now())
+  userName  String?
 }
 
 model Species {

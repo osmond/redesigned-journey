@@ -13,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="flex items-center gap-4 text-sm">
               <a className="hover:underline" href="/">Today</a>
               <a className="hover:underline" href="/plants">My Plants</a>
+              <a className="hover:underline" href="/feed">Feed</a>
               <a className="hover:underline" href="/rooms">Rooms</a>
             </nav>
           </div>

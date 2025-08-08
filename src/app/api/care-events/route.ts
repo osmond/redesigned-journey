@@ -7,6 +7,7 @@ const schema = z.object({
   type: z.enum(['WATER', 'FERTILIZE', 'PRUNE', 'REPOT', 'NOTE']),
   amountMl: z.number().int().positive().optional(),
   note: z.string().optional(),
+  userName: z.string().min(1).optional(),
 })
 
 async function fetchWeather(lat: number, lon: number) {
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
     type: parsed.data.type as any,
     amountMl: parsed.data.amountMl ?? null,
     note: parsed.data.note ?? null,
+    userName: parsed.data.userName ?? null,
     tempC: weather?.tempC ?? null,
     humidity: weather?.humidity ?? null,
     precipMm: weather?.precipMm ?? null,
@@ -52,4 +54,22 @@ export async function POST(req: Request) {
   if (parsed.data.type === 'FERTILIZE') await prisma.plant.update({ where: { id: plant.id }, data: { lastFertilizedAt: new Date() } })
 
   return NextResponse.json(event, { status: 201 })
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const plantId = searchParams.get('plantId')
+  const type = searchParams.get('type')
+  const user = searchParams.get('user')
+  const where: any = {}
+  if (plantId) where.plantId = plantId
+  if (type) where.type = type as any
+  if (user) where.userName = user
+  const events = await prisma.careEvent.findMany({
+    where,
+    include: { plant: true },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+  })
+  return NextResponse.json(events)
 }
