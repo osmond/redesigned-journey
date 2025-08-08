@@ -8,3 +8,4 @@ body { @apply bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100; }
 .input { @apply w-full rounded-xl border border-slate-300 dark:border-slate-700 px-3 py-2 bg-white dark:bg-slate-900; }
 .label { @apply text-sm font-medium text-slate-600 dark:text-slate-300; }
 .row { @apply flex items-center justify-between gap-4; }
+.badge { @apply inline-flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs px-2 py-0.5; }

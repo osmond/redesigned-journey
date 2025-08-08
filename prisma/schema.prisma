@@ -11,6 +11,7 @@ datasource db {
 model Room {
   id        String   @id @default(cuid())
   name      String
+  sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   plants    Plant[]
 }
