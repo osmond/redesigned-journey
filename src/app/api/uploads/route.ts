@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
+import { getSessionUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -20,18 +21,18 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const file = form.get('file') as File | null;
     const plantId = form.get('plantId') as string | null;
-    const userId = req.headers.get('x-user-id');
-    if (!file || !plantId || !userId) {
+    const user = await getSessionUser();
+    if (!file || !plantId || !user) {
       return NextResponse.json({ error: 'file, plantId, and user' }, { status: 400 });
     }
 
-    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } });
+    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId: user.id } });
     if (!plant) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
 
     const ext = file.name.split('.').pop() || 'jpg';
-    const key = `users/${userId}/plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const key = `users/${user.id}/plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const arrayBuf = await file.arrayBuffer();
 
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         plantId,
-        userId,
+        userId: user.id,
         objectKey: key,
         url,
         thumbUrl: url,

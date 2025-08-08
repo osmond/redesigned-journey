@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getSessionUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -7,8 +8,8 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = req.headers.get('x-user-id');
-    if (!userId) {
+    const user = await getSessionUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } });
+    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId: user.id } });
     if (!plant) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         plantId,
-        userId,
+        userId: user.id,
         objectKey,
         url,
         thumbUrl,

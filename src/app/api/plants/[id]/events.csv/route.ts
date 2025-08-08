@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/db'
+import { NextResponse } from 'next/server'
+import { getSessionUser } from '@/lib/auth'
 
 function parseCsv(text: string) {
   const lines = text.trim().split(/\r?\n/)
@@ -14,8 +16,12 @@ function parseCsv(text: string) {
 }
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const plant = await prisma.plant.findFirst({ where: { id: params.id, userId: user.id } })
+  if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 })
   const events = await prisma.careEvent.findMany({
-    where: { plantId: params.id },
+    where: { plantId: params.id, plant: { userId: user.id } },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -53,6 +59,10 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 }
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const plant = await prisma.plant.findFirst({ where: { id: params.id, userId: user.id } })
+  if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 })
   const { csv, mapping = {} } = await req.json()
   const rows = parseCsv(csv)
 
@@ -82,6 +92,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return ev
   })
 
-  if (events.length) await prisma.careEvent.createMany({ data: events })
-  return Response.json({ imported: events.length })
+  if (events.length)
+    await prisma.careEvent.createMany({ data: events })
+  return NextResponse.json({ imported: events.length })
 }
