@@ -12,7 +12,7 @@ import { supabaseServer } from '@/lib/supabaseServer'
 
 
 export const metadata: Metadata = {
-  title: 'Plant Care (Local Dev)',
+  title: 'Plant Care',
   description: 'No-cloud local dev build',
   manifest: '/manifest.json',
   icons: {
@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SupabaseProvider initialSession={session}>
           <header className="border-b border-slate-200 dark:border-slate-800">
             <div className="container py-4 flex items-center justify-between">
-              <h1 className="text-xl font-semibold">🌿 Plant Care (Local)</h1>
+              <h1 className="text-xl font-semibold">🌿 Plant Care</h1>
               <nav className="flex items-center gap-4 text-sm">
                 <a className="hover:underline" href="/">Today</a>
                 <a className="hover:underline" href="/plants">My Plants</a>
