@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { r2, R2_BUCKET } from '@/lib/r2';
+import { enqueueImage } from '@/lib/imageQueue';
 
 async function getUserId() {
   const cookieStore = cookies();
@@ -22,15 +24,6 @@ async function getUserId() {
 
 export const runtime = 'nodejs';
 
-const s3 = new S3Client({
-  region: 'auto',
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
-
 export async function POST(req: NextRequest) {
   try {
     // Expecting multipart/form-data: file + plantId
@@ -47,44 +40,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
 
-    const ext = file.name.split('.').pop() || 'jpg';
-    const key = `users/${userId}/plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const ext = file.name.includes('.') ? `.${file.name.split('.').pop()}` : '';
+    const baseKey = `users/${userId}/plants/${plantId}/${Date.now()}-${crypto.randomUUID()}`;
+    const originalKey = `originals/${baseKey}${ext}`;
 
     const arrayBuf = await file.arrayBuffer();
 
-    await s3.send(
+    await r2.send(
       new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET!,
-        Key: key,
+        Bucket: R2_BUCKET,
+        Key: originalKey,
         Body: Buffer.from(arrayBuf),
         ContentType: file.type || 'application/octet-stream',
-        // set cache headers if you want:
-        // CacheControl: 'public, max-age=31536000, immutable',
+        // originals stored without public access; lifecycle rules handled in bucket config
       })
     );
 
-    // public URL (via your public hostname)
-    const publicBase =
-      process.env.NEXT_PUBLIC_R2_CUSTOM_HOSTNAME ||
-      process.env.NEXT_PUBLIC_R2_PUBLIC_HOSTNAME;
-    const url = `https://${publicBase}/${key}`;
-
-    // save photo row
     const photo = await prisma.photo.create({
       data: {
         plantId,
         userId,
-        objectKey: key,
-        url,
-
-        // TODO: generate a separate thumbnail URL; use main URL for now
-        thumbUrl: url,
-        contentType: file.type || undefined,
-
+        objectKey: `${baseKey}.webp`, // final processed key
+        url: '',
+        thumbUrl: '',
+        contentType: 'image/webp',
       },
     });
 
-    return NextResponse.json({ ok: true, photo }, { status: 200 });
+    await enqueueImage({ originalKey, baseKey, photoId: photo.id });
+
+    return NextResponse.json({ ok: true, photoId: photo.id }, { status: 200 });
   } catch (err: any) {
     console.error('upload error', err);
     return NextResponse.json({ error: err?.message || 'Upload failed' }, { status: 500 });
