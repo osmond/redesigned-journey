@@ -1,5 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 
 import ServiceWorkerRegistration from '../components/ServiceWorkerRegistration'
 
@@ -57,6 +58,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </header>
           <main className="container py-6">{children}</main>
         </SupabaseProvider>
+
+        {process.env.NODE_ENV === 'production' && <Analytics />}
 
       </body>
     </html>
