@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { r2, R2_BUCKET } from '@/lib/r2';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { z } from 'zod';
 
 async function getUserId() {
   const cookieStore = cookies();
@@ -69,9 +70,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { action } = await req.json();
-    if (action !== 'cover') return NextResponse.json({ error: 'unsupported action' }, { status: 400 });
+    const schema = z.object({ action: z.literal('cover') });
+    const json = await req.json();
+    const parsed = schema.safeParse(json);
+    if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
     const photo = await prisma.photo.findUnique({ where: { id: params.id } });
     if (!photo || photo.userId !== userId) {
