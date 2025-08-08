@@ -15,7 +15,11 @@ export default function TaskRow({ task }: { task: { kind: 'WATER' | 'FERTILIZE';
     router.refresh()
   }
 
-  async function snooze(days: number) {
+  async function snooze() {
+    const daysStr = window.prompt('Snooze how many days?', '1')
+    if (!daysStr) return
+    const days = Number(daysStr)
+    if (!Number.isFinite(days) || days <= 0) return
     const field = task.kind === 'WATER' ? 'lastWateredAt' : 'lastFertilizedAt'
     const base = (task.plant as any)[field] ?? task.plant.createdAt
     const newDate = addDays(new Date(base), days)
@@ -40,15 +44,9 @@ export default function TaskRow({ task }: { task: { kind: 'WATER' | 'FERTILIZE';
           <button className="btn bg-emerald-600 text-white" onClick={done}>
             Done
           </button>
-          {[1, 2, 3].map((d) => (
-            <button
-              key={d}
-              className="btn bg-slate-700 text-white px-2 py-2"
-              onClick={() => snooze(d)}
-            >
-              +{d}
-            </button>
-          ))}
+          <button className="btn bg-slate-700 text-white" onClick={snooze}>
+            Snooze
+          </button>
         </div>
       </div>
     </li>
