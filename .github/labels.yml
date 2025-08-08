@@ -1,0 +1,24 @@
+# Declarative label list. Re-run the workflow any time this file changes.
+- name: now
+  color: B60205
+  description: Do now
+
+- name: next
+  color: 0E8A16
+  description: Do next
+
+- name: later
+  color: 1D76DB
+  description: Later / backlog
+
+- name: enhancement
+  color: A2EEEF
+  description: Feature work
+
+- name: infra
+  color: 5319E7
+  description: Tooling / infrastructure
+
+- name: bug
+  color: D73A4A
+  description: Something is broken

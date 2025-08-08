@@ -1,0 +1,28 @@
+name: Sync labels
+
+on:
+  push:
+    paths:
+      - .github/labels.yml
+      - .github/workflows/sync-labels.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  labeler:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply labels from .github/labels.yml
+        uses: crazy-max/ghaction-github-labeler@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: .github/labels.yml
+          # Keep this true so we don't delete any ad-hoc labels you add by hand.
+          skip-delete: true
+          dry-run: false
