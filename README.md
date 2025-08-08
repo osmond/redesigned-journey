@@ -126,6 +126,7 @@ npm run start      # Next start
 
 npm run db:push    # Push Prisma schema to DB
 npm run seed       # Seed sample rooms/plants (optional)
+npm test          # Run tests (currently none)
 Project structure (high level)
 bash
 Copy
