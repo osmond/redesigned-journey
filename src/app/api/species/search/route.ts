@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getSessionUser } from '@/lib/auth'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+async function getUserId() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.user.id ?? null
+}
 
 type SuggestItem = { id?: string; name: string; description?: string }
 
@@ -27,8 +41,8 @@ async function gbifSuggest(q: string): Promise<SuggestItem[]> {
 }
 
 export async function GET(req: Request) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const q = (searchParams.get('q') || '').trim()
   if (!q) return NextResponse.json({ result: [] })

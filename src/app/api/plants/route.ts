@@ -1,7 +1,21 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { getSessionUser } from '@/lib/auth'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+async function getUserId() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.user.id ?? null
+}
 
 const bodySchema = z.object({
   name: z.string().min(1),
@@ -22,18 +36,18 @@ const bodySchema = z.object({
 })
 
 export async function GET() {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const plants = await prisma.plant.findMany({
-    where: { userId: user.id },
+    where: { userId },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json(plants)
 }
 
 export async function POST(req: Request) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const json = await req.json()
   const parsed = bodySchema.safeParse(json)
@@ -42,7 +56,7 @@ export async function POST(req: Request) {
 
   const p = await prisma.plant.create({
     data: {
-      userId: user.id,
+      userId,
       name: d.name,
       species: d.species || null,
       commonName: d.commonName || null,

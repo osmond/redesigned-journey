@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getSessionUser } from '@/lib/auth';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+async function getUserId() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user.id ?? null;
+}
 
 export const runtime = 'nodejs';
 
@@ -8,8 +22,8 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const userId = await getUserId();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId: user.id } });
+    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } });
     if (!plant) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
@@ -31,7 +45,7 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         plantId,
-        userId: user.id,
+        userId,
         objectKey,
         url,
         thumbUrl,
