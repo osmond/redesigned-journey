@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import Image from 'next/image'
 import CareButtons from '@/components/CareButtons'
-import { format } from 'date-fns'
+import CareTimeline from '@/components/CareTimeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,22 +34,23 @@ export default async function PlantDetail({ params }: { params: { id: string } }
       </section>
 
       <section className="card">
-        <h3 className="text-lg font-semibold mb-3">History</h3>
-        {plant.events.length === 0 ? (
-          <p>No care events yet.</p>
-        ) : (
-          <ul className="space-y-2">
-            {plant.events.map((ev) => (
-              <li key={ev.id} className="border-b border-slate-800 pb-2 last:border-b-0 last:pb-0">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">{ev.type}</span>
-                  <span>{format(ev.createdAt, 'PPP')}</span>
-                </div>
-                {ev.note && <div className="text-xs text-slate-400">{ev.note}</div>}
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg font-semibold">History</h3>
+          <a
+            href={`/api/plants/${plant.id}/events.csv`}
+            className="btn btn-sm"
+          >
+            Export CSV
+          </a>
+        </div>
+        <CareTimeline
+          events={plant.events.map((ev) => ({
+            id: ev.id,
+            type: ev.type,
+            note: ev.note,
+            createdAt: ev.createdAt.toISOString(),
+          }))}
+        />
       </section>
     </div>
   )
