@@ -13,7 +13,11 @@ Photo uploads to Cloudflare R2 (presigned PUT)
 
 Weather snapshot defaults (optional lat/lon)
 
+
+Daily email reminders for due tasks
+
 Full backup/restore via JSON and CSV care event import
+
 
 Quick start
 1) Prereqs
@@ -57,6 +61,14 @@ TREFLE_TOKEN=""
 # Optional: default lat/lon for weather snapshots
 DEFAULT_LAT="44.9778"
 DEFAULT_LON="-93.2650"
+
+# Optional: email reminders
+SMTP_HOST="smtp.example.com"
+SMTP_PORT="587"
+SMTP_USER="username"
+SMTP_PASS="password"
+EMAIL_FROM="plantcare@example.com"
+EMAIL_TO="you@example.com"
 Tip: keep .env.example updated for collaborators.
 
 4) Database
