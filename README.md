@@ -13,6 +13,8 @@ Photo uploads to Cloudflare R2 (presigned PUT)
 
 Weather snapshot defaults (optional lat/lon)
 
+Full backup/restore via JSON and CSV care event import
+
 Quick start
 1) Prereqs
 Node 18+ (or 20+)
