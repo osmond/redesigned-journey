@@ -14,7 +14,7 @@ export async function GET(req: Request, { params }: Params) {
   const password = new URL(req.url).searchParams.get('password') ?? undefined;
 
   const link = await prisma.shareLink.findFirst({
-    where: { id, userId: user.id } as any,
+    where: { id, userId: user.id },
     include: {
       plant: { include: { photos: true, events: true } },
       room: { include: { plants: { include: { photos: true, events: true } } } },

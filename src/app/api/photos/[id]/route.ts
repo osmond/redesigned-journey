@@ -26,14 +26,14 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     // remove db record
-    await prisma.photo.delete({ where: { id: params.id, userId: user.id } as any });
+    await prisma.photo.delete({ where: { id: params.id, userId: user.id } });
 
     // if it was cover, pick another photo (if any) as cover
     const plant = await prisma.plant.findFirst({ where: { id: photo.plantId, userId: user.id }, select: { coverPhotoId: true } });
     if (plant?.coverPhotoId === photo.id) {
       const fallback = await prisma.photo.findFirst({ where: { plantId: photo.plantId, userId: user.id } });
       await prisma.plant.update({
-        where: { id: photo.plantId },
+        where: { id: photo.plantId, userId: user.id },
         data: { coverPhotoId: fallback?.id ?? null },
       });
     }
@@ -58,7 +58,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const photo = await prisma.photo.findFirst({ where: { id: params.id, userId: user.id } });
     if (!photo) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
-    await prisma.plant.update({ where: { id: photo.plantId }, data: { coverPhotoId: photo.id, userId: user.id } as any });
+    await prisma.plant.update({ where: { id: photo.plantId, userId: user.id }, data: { coverPhotoId: photo.id } });
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {
