@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   if (!plantId) return NextResponse.json({ error: 'plantId required' }, { status: 400 })
   const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } })
   if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 })
-  const key = `${plantId}/${randomUUID()}.${(ext || 'jpg').replace(/[^a-zA-Z0-9]/g, '')}`
+  const key = `users/${userId}/plants/${plantId}/${randomUUID()}.${(ext || 'jpg').replace(/[^a-zA-Z0-9]/g, '')}`
 
   const command = new PutObjectCommand({
     Bucket: R2_BUCKET,
