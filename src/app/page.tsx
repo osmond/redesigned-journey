@@ -4,10 +4,13 @@ import { format } from 'date-fns'
 import { computeTaskLists } from '@/lib/tasks'
 import TaskCalendar from '@/components/TaskCalendar'
 
+const userId = 'seed-user'
+
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
   const plants = await prisma.plant.findMany({
+    where: { userId },
     orderBy: { createdAt: 'desc' },
   })
 

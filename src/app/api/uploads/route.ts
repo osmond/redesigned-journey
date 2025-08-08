@@ -3,6 +3,8 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 
+const userId = 'seed-user';
+
 export const runtime = 'nodejs';
 
 const s3 = new S3Client({
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         plantId,
+        userId,
         objectKey: key,
         url,
         thumbUrl: url,

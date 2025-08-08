@@ -3,11 +3,13 @@ import Image from 'next/image'
 import CareButtons from '@/components/CareButtons'
 import CareTimeline from '@/components/CareTimeline'
 
+const userId = 'seed-user'
+
 export const dynamic = 'force-dynamic'
 
 export default async function PlantDetail({ params }: { params: { id: string } }) {
-  const plant = await prisma.plant.findUnique({
-    where: { id: params.id },
+  const plant = await prisma.plant.findFirst({
+    where: { id: params.id, userId },
     include: { photos: true, events: { orderBy: { createdAt: 'desc' } } },
   })
   if (!plant) return <div className="card">Plant not found</div>

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+
+const userId = 'seed-user'
 import { z } from 'zod'
 
 const patchSchema = z.object({
@@ -31,8 +33,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.photo.deleteMany({ where: { plantId: params.id } })
-  await prisma.careEvent.deleteMany({ where: { plantId: params.id } })
+  await prisma.photo.deleteMany({ where: { plantId: params.id, userId } })
+  await prisma.careEvent.deleteMany({ where: { plantId: params.id, userId } })
   await prisma.plant.delete({ where: { id: params.id } })
   return NextResponse.json({ ok: true })
 }

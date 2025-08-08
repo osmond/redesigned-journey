@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+const userId = 'seed-user';
+
 export const runtime = 'nodejs';
 
 // optional: list photos or create from a JSON payload if you're not doing direct upload in /api/uploads
@@ -20,6 +22,7 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         plantId,
+        userId,
         objectKey,
         url,
         thumbUrl,

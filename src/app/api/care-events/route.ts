@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+
+const userId = 'seed-user'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -29,7 +31,7 @@ export async function POST(req: Request) {
   if (parsed.data.type === 'NOTE' && !parsed.data.note)
     return NextResponse.json({ error: 'note required' }, { status: 400 })
 
-  const plant = await prisma.plant.findUnique({ where: { id: parsed.data.plantId } })
+  const plant = await prisma.plant.findFirst({ where: { id: parsed.data.plantId, userId } })
   if (!plant) return NextResponse.json({ error: 'Plant not found' }, { status: 404 })
 
   const lat = plant.latitude ?? Number(process.env.DEFAULT_LAT)
@@ -39,6 +41,7 @@ export async function POST(req: Request) {
 
   const event = await prisma.careEvent.create({ data: {
     plantId: plant.id,
+    userId,
     type: parsed.data.type as any,
     amountMl: parsed.data.amountMl ?? null,
     note: parsed.data.note ?? null,
@@ -61,7 +64,7 @@ export async function GET(req: Request) {
   const plantId = searchParams.get('plantId')
   const type = searchParams.get('type')
   const user = searchParams.get('user')
-  const where: any = {}
+  const where: any = { userId }
   if (plantId) where.plantId = plantId
   if (type) where.type = type as any
   if (user) where.userName = user

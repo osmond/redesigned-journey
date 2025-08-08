@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+
+const userId = 'seed-user'
 import { z } from 'zod'
 
 const bodySchema = z.object({
@@ -21,7 +23,7 @@ const bodySchema = z.object({
 })
 
 export async function GET() {
-  const plants = await prisma.plant.findMany({ orderBy: { createdAt: 'desc' } })
+  const plants = await prisma.plant.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } })
   return NextResponse.json(plants)
 }
 
@@ -33,6 +35,7 @@ export async function POST(req: Request) {
 
   const p = await prisma.plant.create({
     data: {
+      userId,
       name: d.name,
       species: d.species || null,
       commonName: d.commonName || null,

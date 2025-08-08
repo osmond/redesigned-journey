@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 import { format } from 'date-fns'
 import type { CareType } from '@prisma/client'
 
+const userId = 'seed-user'
+
 export const dynamic = 'force-dynamic'
 
 const careTypes: CareType[] = ['WATER', 'FERTILIZE', 'PRUNE', 'REPOT', 'NOTE']
@@ -23,7 +25,7 @@ function actionWord(type: CareType) {
 
 export default async function FeedPage({ searchParams }: { searchParams: { user?: string; plant?: string; type?: string } }) {
   const { user, plant, type } = searchParams
-  const where: any = {}
+  const where: any = { userId }
   if (user) where.userName = user
   if (plant) where.plantId = plant
   if (type) where.type = type as CareType
@@ -35,7 +37,7 @@ export default async function FeedPage({ searchParams }: { searchParams: { user?
       orderBy: { createdAt: 'desc' },
       take: 100,
     }),
-    prisma.plant.findMany({ orderBy: { name: 'asc' } }),
+    prisma.plant.findMany({ where: { userId }, orderBy: { name: 'asc' } }),
   ])
 
   return (

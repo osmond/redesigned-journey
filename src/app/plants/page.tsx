@@ -4,12 +4,14 @@ import PlantCard from '@/components/PlantCard'
 import { nextWaterDate, nextFertilizeDate, isDueOrOverdue } from '@/lib/schedule'
 import type { LightLevel } from '@prisma/client'
 
+const userId = 'seed-user'
+
 export const dynamic = 'force-dynamic'
 
 export default async function PlantsPage({ searchParams }: { searchParams: { q?: string; room?: string; light?: string; overdue?: string } }) {
   const { q, room, light, overdue } = searchParams
 
-  const where: any = {}
+  const where: any = { userId }
 
   if (q) {
     where.OR = [
@@ -24,7 +26,7 @@ export default async function PlantsPage({ searchParams }: { searchParams: { q?:
 
   const [plantsRaw, rooms] = await Promise.all([
     prisma.plant.findMany({ include: { photos: true, room: true }, where, orderBy: { createdAt: 'desc' } }),
-    prisma.room.findMany({ orderBy: { name: 'asc' } }),
+    prisma.room.findMany({ where: { userId }, orderBy: { name: 'asc' } }),
   ])
 
   let plants = plantsRaw

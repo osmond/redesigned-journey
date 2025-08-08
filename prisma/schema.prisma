@@ -13,11 +13,16 @@ model Room {
   name      String
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
+  userId    String
   plants    Plant[]
+  shareLinks ShareLink[]
+
+  @@index([userId])
 }
 
 model Plant {
   id           String  @id @default(cuid())
+  userId       String
   name         String
   species      String?
   commonName   String?
@@ -44,12 +49,16 @@ model Plant {
 
   photos    Photo[]
   events    CareEvent[]
+  shareLinks ShareLink[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([userId])
 }
 
 model Photo {
   id          String   @id @default(cuid())
+  userId      String
   plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
   plantId     String
   objectKey   String   @unique
@@ -59,10 +68,13 @@ model Photo {
   width       Int?
   height      Int?
   createdAt   DateTime @default(now())
+
+  @@index([userId])
 }
 
 model CareEvent {
   id        String   @id @default(cuid())
+  userId    String
   plant     Plant    @relation(fields: [plantId], references: [id])
   plantId   String
   type      CareType
@@ -75,6 +87,8 @@ model CareEvent {
   lon       Float?
   createdAt DateTime @default(now())
   userName  String?
+
+  @@index([userId])
 }
 
 model ShareLink {

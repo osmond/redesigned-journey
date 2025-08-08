@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/db'
 
+const userId = 'seed-user'
+
 function parseCsv(text: string) {
   const lines = text.trim().split(/\r?\n/)
   const headers = lines[0].split(',')
@@ -15,7 +17,7 @@ function parseCsv(text: string) {
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const events = await prisma.careEvent.findMany({
-    where: { plantId: params.id },
+    where: { plantId: params.id, userId },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -57,7 +59,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const rows = parseCsv(csv)
 
   const events = rows.map((row) => {
-    const ev: any = { plantId: params.id }
+    const ev: any = { plantId: params.id, userId }
     for (const [col, value] of Object.entries(row)) {
       const field = (mapping as Record<string, string>)[col] ?? col
       if (!value) continue
