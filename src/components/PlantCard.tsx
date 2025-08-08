@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import UploadWidget from './UploadWidget';
 import CareButtons from './CareButtons';
 import type { Photo, Plant } from '@prisma/client';
+import { cfResize } from '@/lib/image';
 
 type PlantWithPhotos = Plant & { photos: Photo[] };
 
@@ -37,7 +38,7 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
         {cover ? (
           <Image
             alt={plant.name}
-            src={cover.url}
+            src={cfResize(cover.url, 800)}
             width={cover.width ?? 800}
             height={cover.height ?? 600}
             className="h-full w-full object-cover"
@@ -54,7 +55,7 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
             <div key={p.id} className="relative group">
               <Image
                 alt="thumb"
-                src={p.thumbUrl ?? p.url}
+                src={cfResize(p.thumbUrl ?? p.url, 400)}
                 width={p.width ?? 400}
                 height={p.height ?? 300}
                 className="h-24 w-full object-cover rounded border border-slate-800"

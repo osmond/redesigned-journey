@@ -9,7 +9,7 @@ Rooms & plants (water/fertilize intervals, notes, etc.)
 
 Smart form: species suggestions & default care values
 
-Photo uploads to Cloudflare R2 (presigned PUT)
+Photo uploads to Cloudflare R2 with server-side processing (WebP/AVIF, thumbnails)
 
 Weather snapshot defaults (optional lat/lon)
 
@@ -191,6 +191,9 @@ git rm --cached .env
 echo ".env" >> .gitignore
 git commit -m "Remove .env and rotate secrets"
 git push
+ 
+Background image processing
+Uploads now store originals in an `originals/` prefix. A BullMQ worker (Redis + Sharp) generates WebP/AVIF variants and thumbnails in the background. Run it with `npm run worker`. Configure bucket lifecycle rules to move originals to cold storage.
 Tech notes
 R2 is S3-compatible; uploads use presigned PUT from the server (no credentials in the browser).
 

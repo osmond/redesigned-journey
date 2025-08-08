@@ -20,6 +20,9 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_R2_CUSTOM_HOSTNAME
         ? { protocol: 'https', hostname: process.env.NEXT_PUBLIC_R2_CUSTOM_HOSTNAME, pathname: '/**' }
         : undefined,
+      process.env.NEXT_PUBLIC_CF_IMAGE_BASE
+        ? { protocol: 'https', hostname: new URL(process.env.NEXT_PUBLIC_CF_IMAGE_BASE).hostname, pathname: '/**' }
+        : undefined,
     ].filter(Boolean),
   },
   async headers() {
