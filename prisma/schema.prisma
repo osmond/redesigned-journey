@@ -9,12 +9,12 @@ datasource db {
 }
 
 model Room {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  plants    Plant[]
+  id         String      @id @default(cuid())
+  userId     String
+  name       String
+  sortOrder  Int         @default(0)
+  createdAt  DateTime    @default(now())
+  plants     Plant[]
   shareLinks ShareLink[]
 
   @@index([userId])
@@ -47,11 +47,11 @@ model Plant {
   // NEW: which photo should be used as the cover in cards
   coverPhotoId String?
 
-  photos    Photo[]
-  events    CareEvent[]
+  photos     Photo[]
+  events     CareEvent[]
   shareLinks ShareLink[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@index([userId])
 }

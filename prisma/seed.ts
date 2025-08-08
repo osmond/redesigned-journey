@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Rooms
+  // Use a stable userId for seeded entities
   const userId = 'seed-user';
   const living = await prisma.room.upsert({
     where: { id: 'seed-living' },
