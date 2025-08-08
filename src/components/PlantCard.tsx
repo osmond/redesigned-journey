@@ -54,7 +54,7 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
             <div key={p.id} className="relative group">
               <Image
                 alt="thumb"
-                src={p.url}
+                src={p.thumbUrl ?? p.url}
                 width={p.width ?? 400}
                 height={p.height ?? 300}
                 className="h-24 w-full object-cover rounded border border-slate-800"

@@ -53,6 +53,7 @@ model Photo {
   plantId     String
   objectKey   String   @unique
   url         String
+  thumbUrl    String
   contentType String?
   width       Int?
   height      Int?

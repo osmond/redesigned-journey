@@ -182,26 +182,35 @@ export default function UploadWidget({ plantId }: Props) {
   );
 
   async function handleFile(file: File, onProgress: (p: number) => void) {
-    // 1) Resize + auto-rotate using createImageBitmap + canvas
-    const { blob, width, height, outType } = await resize(file, {
-      max: 1600,
+    // 1) Resize full + thumb with auto-rotate
+    const { blob: fullBlob, width, height, outType } = await resize(file, {
+      max: 800,
       quality: 0.85,
     });
+    const { blob: thumbBlob } = await resize(file, { max: 400, quality: 0.8 });
 
-    // 2) Create object key & presign
+    // 2) Create object keys & presign
     const ext = outType === 'image/png' ? 'png' : 'jpg';
     const objectKey = `plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const thumbKey = objectKey.replace(/\.[^.]+$/, (m) => `-thumb${m}`);
 
-    const presign = await fetch('/api/uploads/presign', {
+    const fullPresign = await fetch('/api/uploads/presign', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ objectKey, contentType: outType }),
     }).then((r) => r.json());
+    const thumbPresign = await fetch('/api/uploads/presign', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ objectKey: thumbKey, contentType: outType }),
+    }).then((r) => r.json());
 
-    if (!presign?.uploadUrl) throw new Error(presign?.error ?? 'presign failed');
+    if (!fullPresign?.uploadUrl || !thumbPresign?.uploadUrl)
+      throw new Error(fullPresign?.error ?? thumbPresign?.error ?? 'presign failed');
 
-    // 3) Upload with XHR so we can show progress
-    await xhrPut(presign.uploadUrl, blob, outType, onProgress);
+    // 3) Upload blobs (track progress on full)
+    await xhrPut(fullPresign.uploadUrl, fullBlob, outType, onProgress);
+    await xhrPut(thumbPresign.uploadUrl, thumbBlob, outType, () => {});
 
     // 4) Save Photo row
     const create = await fetch('/api/photos', {
@@ -210,7 +219,8 @@ export default function UploadWidget({ plantId }: Props) {
       body: JSON.stringify({
         plantId,
         objectKey,
-        url: presign.publicUrl,
+        url: fullPresign.publicUrl,
+        thumbUrl: thumbPresign.publicUrl,
         contentType: outType,
         width,
         height,
