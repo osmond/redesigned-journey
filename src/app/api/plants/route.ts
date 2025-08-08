@@ -26,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const userId = req.headers.get('x-user-id')
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const json = await req.json()
   const parsed = bodySchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
@@ -33,6 +36,7 @@ export async function POST(req: Request) {
 
   const p = await prisma.plant.create({
     data: {
+      userId,
       name: d.name,
       species: d.species || null,
       commonName: d.commonName || null,

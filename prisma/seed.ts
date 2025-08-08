@@ -12,11 +12,13 @@ async function main() {
   // Plants
   const now = new Date();
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+  const userId = 'seed-user';
 
   await prisma.plant.createMany({
     data: [
       {
         id: 'seed-monstera',
+        userId,
         name: 'Monstera',
         commonName: 'Swiss Cheese Plant',
         roomId: living.id,
@@ -28,6 +30,7 @@ async function main() {
       },
       {
         id: 'seed-snake',
+        userId,
         name: 'Sansevieria trifasciata',
         commonName: 'Snake Plant',
         roomId: living.id,
