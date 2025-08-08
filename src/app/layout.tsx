@@ -1,7 +1,17 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import ServiceWorkerRegistration from '../components/ServiceWorkerRegistration'
 
-export const metadata: Metadata = { title: 'Plant Care (Local Dev)', description: 'No-cloud local dev build' }
+export const metadata: Metadata = {
+  title: 'Plant Care (Local Dev)',
+  description: 'No-cloud local dev build',
+  manifest: '/manifest.json',
+  themeColor: '#16a34a',
+  icons: {
+    icon: '/icon-192x192.png',
+    apple: '/icon-192x192.png'
+  }
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
         <main className="container py-6">{children}</main>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   )
