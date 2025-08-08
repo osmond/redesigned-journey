@@ -1,7 +1,23 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { getSessionUser } from '@/lib/auth'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+async function getUserId() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: { getAll: () => cookieStore.getAll() },
+    }
+  )
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.user.id ?? null
+}
 
 const patchSchema = z.object({
   name: z.string().optional(),
@@ -24,27 +40,27 @@ const patchSchema = z.object({
 })
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const json = await req.json()
   const parsed = patchSchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-  const plant = await prisma.plant.findFirst({ where: { id: params.id, userId: user.id } })
+  const plant = await prisma.plant.findFirst({ where: { id: params.id, userId } })
   if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 })
   const updated = await prisma.plant.update({
-    where: { id: params.id },
-    data: { ...parsed.data, userId: user.id },
+    where: { id: params.id, userId },
+    data: { ...parsed.data, userId },
   })
   return NextResponse.json(updated)
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const plant = await prisma.plant.findFirst({ where: { id: params.id, userId: user.id } })
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const plant = await prisma.plant.findFirst({ where: { id: params.id, userId } })
   if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 })
-  await prisma.photo.deleteMany({ where: { plantId: params.id, userId: user.id } })
-  await prisma.careEvent.deleteMany({ where: { plantId: params.id, userId: user.id } })
-  await prisma.plant.delete({ where: { id: params.id } })
+  await prisma.photo.deleteMany({ where: { plantId: params.id, userId } })
+  await prisma.careEvent.deleteMany({ where: { plantId: params.id, userId } })
+  await prisma.plant.deleteMany({ where: { id: params.id, userId } })
   return NextResponse.json({ ok: true })
 }

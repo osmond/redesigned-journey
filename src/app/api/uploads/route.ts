@@ -2,7 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
-import { getSessionUser } from '@/lib/auth';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+async function getUserId() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: { getAll: () => cookieStore.getAll() },
+    }
+  );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user.id ?? null;
+}
 
 export const runtime = 'nodejs';
 
@@ -21,18 +37,18 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const file = form.get('file') as File | null;
     const plantId = form.get('plantId') as string | null;
-    const user = await getSessionUser();
-    if (!file || !plantId || !user) {
+    const userId = await getUserId();
+    if (!file || !plantId || !userId) {
       return NextResponse.json({ error: 'file, plantId, and user' }, { status: 400 });
     }
 
-    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId: user.id } });
+    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } });
     if (!plant) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
 
     const ext = file.name.split('.').pop() || 'jpg';
-    const key = `users/${user.id}/plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const key = `users/${userId}/plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const arrayBuf = await file.arrayBuffer();
 
@@ -57,7 +73,7 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         plantId,
-        userId: user.id,
+        userId,
         objectKey: key,
         url,
 

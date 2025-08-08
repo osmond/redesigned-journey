@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createHash } from 'crypto';
-import { getSessionUser } from '@/lib/auth';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+async function getUserId() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session?.user.id ?? null;
+}
 
 interface Params {
   params: { id: string };
 }
 
 export async function GET(req: Request, { params }: Params) {
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const userId = await getUserId();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = params;
   const password = new URL(req.url).searchParams.get('password') ?? undefined;
 
@@ -17,8 +31,8 @@ export async function GET(req: Request, { params }: Params) {
     where: {
       id,
       OR: [
-        { plant: { userId: user.id } },
-        { room: { userId: user.id } },
+        { plant: { userId } },
+        { room: { userId } },
       ],
     },
     include: {

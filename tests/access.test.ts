@@ -14,3 +14,11 @@ test('plants route uses userId scoping', () => {
 test('photo delete route checks userId', () => {
   assert.ok(hasUserScope('src/app/api/photos/[id]/route.ts'));
 });
+
+test('plant detail route checks userId', () => {
+  assert.ok(hasUserScope('src/app/api/plants/[id]/route.ts'));
+});
+
+test('uploads route checks userId', () => {
+  assert.ok(hasUserScope('src/app/api/uploads/route.ts'));
+});

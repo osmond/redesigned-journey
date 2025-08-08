@@ -1,7 +1,21 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { getSessionUser } from '@/lib/auth'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+async function getUserId() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  )
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.user.id ?? null
+}
 
 const schema = z.object({
   plantId: z.string().min(1),
@@ -24,15 +38,15 @@ async function fetchWeather(lat: number, lon: number) {
 }
 
 export async function POST(req: Request) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const json = await req.json(); const parsed = schema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
   if (parsed.data.type === 'NOTE' && !parsed.data.note)
     return NextResponse.json({ error: 'note required' }, { status: 400 })
 
-  const plant = await prisma.plant.findFirst({ where: { id: parsed.data.plantId, userId: user.id } })
+  const plant = await prisma.plant.findFirst({ where: { id: parsed.data.plantId, userId } })
   if (!plant) return NextResponse.json({ error: 'Plant not found' }, { status: 404 })
 
   const lat = plant.latitude ?? Number(process.env.DEFAULT_LAT)
@@ -43,7 +57,7 @@ export async function POST(req: Request) {
   const event = await prisma.careEvent.create({
     data: {
       plantId: plant.id,
-      userId: user.id,
+      userId,
       type: parsed.data.type as any,
       amountMl: parsed.data.amountMl ?? null,
       note: parsed.data.note ?? null,
@@ -56,20 +70,20 @@ export async function POST(req: Request) {
     },
   })
 
-  if (parsed.data.type === 'WATER') await prisma.plant.update({ where: { id: plant.id }, data: { lastWateredAt: new Date(), userId: user.id } })
-  if (parsed.data.type === 'FERTILIZE') await prisma.plant.update({ where: { id: plant.id }, data: { lastFertilizedAt: new Date(), userId: user.id } })
+  if (parsed.data.type === 'WATER') await prisma.plant.update({ where: { id: plant.id, userId }, data: { lastWateredAt: new Date(), userId } })
+  if (parsed.data.type === 'FERTILIZE') await prisma.plant.update({ where: { id: plant.id, userId }, data: { lastFertilizedAt: new Date(), userId } })
 
   return NextResponse.json(event, { status: 201 })
 }
 
 export async function GET(req: Request) {
-  const user = await getSessionUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const plantId = searchParams.get('plantId')
   const type = searchParams.get('type')
   const userName = searchParams.get('user')
-  const where: any = { userId: user.id }
+  const where: any = { userId }
   if (plantId) where.plantId = plantId
   if (type) where.type = type as any
   if (userName) where.userName = userName
