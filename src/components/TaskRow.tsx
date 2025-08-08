@@ -2,16 +2,13 @@
 import { Plant } from '@prisma/client'
 import { format, addDays } from 'date-fns'
 import { useRouter } from 'next/navigation'
+import { submitCareEvent } from '@/lib/offlineQueue'
 
 export default function TaskRow({ task }: { task: { kind: 'WATER' | 'FERTILIZE'; due: Date; plant: Plant } }) {
   const router = useRouter()
 
   async function done() {
-    await fetch('/api/care-events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plantId: task.plant.id, type: task.kind }),
-    })
+    await submitCareEvent({ plantId: task.plant.id, type: task.kind })
     router.refresh()
   }
 

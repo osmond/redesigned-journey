@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import type { CareType } from '@prisma/client'
+import { submitCareEvent } from '@/lib/offlineQueue'
 
 type BtnDef = { type: CareType; label: string; className: string }
 
@@ -30,11 +31,7 @@ export default function CareButtons({ plantId }: { plantId: string }) {
       userName = u
       localStorage.setItem('userName', userName)
     }
-    await fetch('/api/care-events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plantId, type, note, userName }),
-    })
+    await submitCareEvent({ plantId, type, note, userName })
     router.refresh()
   }
 
