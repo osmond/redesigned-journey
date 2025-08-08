@@ -84,7 +84,8 @@ Edit
 npx prisma generate
 # Push the updated schema to your database
 npm run db:push       # creates tables
-npm run seed         # (optional) seed sample data
+npm run seed -- <userId>  # (optional) seed sample data for that user
+# omit <userId> to reuse the first existing user ID
 Open Prisma Studio (optional):
 
 bash
@@ -132,7 +133,7 @@ npm run build      # Next production build
 npm run start      # Next start
 
 npm run db:push    # Push Prisma schema to DB
-npm run seed       # Seed sample rooms/plants (optional)
+npm run seed -- <userId>  # Seed sample rooms/plants for a user (optional)
 npm test          # Run tests (currently none)
 Project structure (high level)
 bash

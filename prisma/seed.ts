@@ -2,9 +2,20 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  const argUserId = process.argv[2];
+  let userId = argUserId;
+
+  if (!userId) {
+    const existing = await prisma.room.findFirst({ select: { userId: true } });
+    if (existing) {
+      userId = existing.userId;
+      console.log(`Using existing userId: ${userId}`);
+    } else {
+      throw new Error('Please pass a userId: npm run seed -- <userId>');
+    }
+  }
+
   // Rooms
-  // Use a stable userId for seeded entities
-  const userId = 'seed-user';
   const living = await prisma.room.upsert({
     where: { id: 'seed-living' },
     update: { userId },
