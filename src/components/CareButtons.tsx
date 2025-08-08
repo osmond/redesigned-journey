@@ -1,11 +1,22 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import type { CareType } from '@prisma/client'
+
+type BtnDef = { type: CareType; label: string; className: string }
+
+const btns: BtnDef[] = [
+  { type: 'WATER', label: 'Water', className: 'bg-emerald-600' },
+  { type: 'FERTILIZE', label: 'Fertilize', className: 'bg-amber-600' },
+  { type: 'PRUNE', label: 'Prune', className: 'bg-slate-700' },
+  { type: 'REPOT', label: 'Repot', className: 'bg-slate-700' },
+  { type: 'NOTE', label: 'Note', className: 'bg-slate-700' },
+]
 
 export default function CareButtons({ plantId }: { plantId: string }) {
   const router = useRouter()
 
-  async function log(type: 'WATER' | 'FERTILIZE' | 'PRUNE' | 'REPOT' | 'NOTE') {
+  async function log(type: CareType) {
     let note: string | undefined
     if (type === 'NOTE') {
       const n = window.prompt('Add note')
@@ -22,11 +33,15 @@ export default function CareButtons({ plantId }: { plantId: string }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <button className="btn bg-emerald-600 text-white" onClick={() => log('WATER')}>Water</button>
-      <button className="btn bg-amber-600 text-white" onClick={() => log('FERTILIZE')}>Fertilize</button>
-      <button className="btn bg-slate-700 text-white" onClick={() => log('PRUNE')}>Prune</button>
-      <button className="btn bg-slate-700 text-white" onClick={() => log('REPOT')}>Repot</button>
-      <button className="btn bg-slate-700 text-white" onClick={() => log('NOTE')}>Note</button>
+      {btns.map(({ type, label, className }) => (
+        <button
+          key={type}
+          className={`btn ${className} text-white`}
+          onClick={() => log(type)}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   )
 }
