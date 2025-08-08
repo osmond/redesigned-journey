@@ -10,11 +10,14 @@ datasource db {
 
 model Room {
   id        String   @id @default(cuid())
+  userId    String
   name      String
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   plants    Plant[]
   shareLinks ShareLink[]
+
+  @@index([userId])
 }
 
 model Plant {
@@ -49,6 +52,8 @@ model Plant {
   shareLinks ShareLink[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([userId])
 }
 
 model Photo {
@@ -63,10 +68,13 @@ model Photo {
   width       Int?
   height      Int?
   createdAt   DateTime @default(now())
+
+  @@index([userId])
 }
 
 model CareEvent {
   id        String   @id @default(cuid())
+  userId    String
   plant     Plant    @relation(fields: [plantId], references: [id])
   plantId   String
   type      CareType
@@ -79,6 +87,8 @@ model CareEvent {
   lon       Float?
   createdAt DateTime @default(now())
   userName  String?
+
+  @@index([userId])
 }
 
 model ShareLink {

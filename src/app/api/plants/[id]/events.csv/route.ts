@@ -21,7 +21,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   const plant = await prisma.plant.findFirst({ where: { id: params.id, userId: user.id } })
   if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 })
   const events = await prisma.careEvent.findMany({
-    where: { plantId: params.id, plant: { userId: user.id } },
+    where: { plantId: params.id, userId: user.id },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -67,7 +67,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const rows = parseCsv(csv)
 
   const events = rows.map((row) => {
-    const ev: any = { plantId: params.id }
+    const ev: any = { plantId: params.id, userId: user.id }
     for (const [col, value] of Object.entries(row)) {
       const field = (mapping as Record<string, string>)[col] ?? col
       if (!value) continue

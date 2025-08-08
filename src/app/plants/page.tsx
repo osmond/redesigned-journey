@@ -43,7 +43,7 @@ export default async function PlantsPage({ searchParams }: { searchParams: { q?:
 
   const [plantsRaw, rooms] = await Promise.all([
     prisma.plant.findMany({ include: { photos: true, room: true }, where, orderBy: { createdAt: 'desc' } }),
-    prisma.room.findMany({ where: { plants: { some: { userId } } }, orderBy: { name: 'asc' } }),
+    prisma.room.findMany({ where: { userId }, orderBy: { name: 'asc' } }),
   ])
 
   let plants = plantsRaw

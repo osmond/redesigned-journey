@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 });
   }
   if (type === 'room') {
-    const room = await prisma.room.findFirst({ where: { id, userId: user.id } as any });
+    const room = await prisma.room.findFirst({ where: { id, userId: user.id } });
     if (!room) return NextResponse.json({ error: 'not found' }, { status: 404 });
   }
 

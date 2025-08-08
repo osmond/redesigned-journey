@@ -3,16 +3,16 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Rooms
+  const userId = 'seed-user';
   const living = await prisma.room.upsert({
     where: { id: 'seed-living' },
-    update: {},
-    create: { id: 'seed-living', name: 'Living Room', sortOrder: 0 },
+    update: { userId },
+    create: { id: 'seed-living', userId, name: 'Living Room', sortOrder: 0 },
   });
 
   // Plants
   const now = new Date();
   const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
-  const userId = 'seed-user';
 
   await prisma.plant.createMany({
     data: [

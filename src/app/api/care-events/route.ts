@@ -40,18 +40,21 @@ export async function POST(req: Request) {
   let weather: { tempC: number|null, humidity: number|null, precipMm: number|null } | null = null
   if (!Number.isNaN(lat) && !Number.isNaN(lon)) weather = await fetchWeather(lat, lon)
 
-  const event = await prisma.careEvent.create({ data: {
-    plantId: plant.id,
-    type: parsed.data.type as any,
-    amountMl: parsed.data.amountMl ?? null,
-    note: parsed.data.note ?? null,
-    userName: parsed.data.userName ?? null,
-    tempC: weather?.tempC ?? null,
-    humidity: weather?.humidity ?? null,
-    precipMm: weather?.precipMm ?? null,
-    lat: !Number.isNaN(lat) ? lat : null,
-    lon: !Number.isNaN(lon) ? lon : null,
-  }})
+  const event = await prisma.careEvent.create({
+    data: {
+      plantId: plant.id,
+      userId: user.id,
+      type: parsed.data.type as any,
+      amountMl: parsed.data.amountMl ?? null,
+      note: parsed.data.note ?? null,
+      userName: parsed.data.userName ?? null,
+      tempC: weather?.tempC ?? null,
+      humidity: weather?.humidity ?? null,
+      precipMm: weather?.precipMm ?? null,
+      lat: !Number.isNaN(lat) ? lat : null,
+      lon: !Number.isNaN(lon) ? lon : null,
+    },
+  })
 
   if (parsed.data.type === 'WATER') await prisma.plant.update({ where: { id: plant.id }, data: { lastWateredAt: new Date(), userId: user.id } })
   if (parsed.data.type === 'FERTILIZE') await prisma.plant.update({ where: { id: plant.id }, data: { lastFertilizedAt: new Date(), userId: user.id } })
@@ -66,7 +69,7 @@ export async function GET(req: Request) {
   const plantId = searchParams.get('plantId')
   const type = searchParams.get('type')
   const userName = searchParams.get('user')
-  const where: any = { plant: { userId: user.id } }
+  const where: any = { userId: user.id }
   if (plantId) where.plantId = plantId
   if (type) where.type = type as any
   if (userName) where.userName = userName

@@ -23,7 +23,7 @@ export default async function RoomsPage() {
   const userId = session.user.id
 
   const rooms = await prisma.room.findMany({
-    where: { plants: { some: { userId } } },
+    where: { userId },
     include: { plants: { where: { userId } } },
     orderBy: { sortOrder: 'asc' },
   })

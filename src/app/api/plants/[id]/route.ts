@@ -44,7 +44,7 @@ export async function DELETE(_: Request, { params }: { params: { id: string } })
   const plant = await prisma.plant.findFirst({ where: { id: params.id, userId: user.id } })
   if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 })
   await prisma.photo.deleteMany({ where: { plantId: params.id, userId: user.id } })
-  await prisma.careEvent.deleteMany({ where: { plantId: params.id, plant: { userId: user.id } } })
+  await prisma.careEvent.deleteMany({ where: { plantId: params.id, userId: user.id } })
   await prisma.plant.delete({ where: { id: params.id } })
   return NextResponse.json({ ok: true })
 }
