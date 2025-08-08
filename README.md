@@ -19,6 +19,11 @@ Daily email reminders for due tasks
 Full backup/restore via JSON and CSV care event import
 
 
+Integrations
+Calendar sync: 1-way export (2-way sync later)
+
+Storage webhook: ingest images via email-in or share-to
+
 Quick start
 1) Prereqs
 Node 18+ (or 20+)
