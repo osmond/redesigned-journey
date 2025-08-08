@@ -4,7 +4,7 @@ import { nextWaterDate, nextFertilizeDate, isDueOrOverdue, isWithinNextDays } fr
 
 export type Task = { kind: 'WATER' | 'FERTILIZE'; due: Date; plant: Plant }
 
-export function computeTaskLists(plants: Plant[]) {
+export function computeTaskLists(plants: Plant[], daysAhead = 7) {
   const allTasks: Task[] = plants.flatMap((p) => [
     { kind: 'WATER' as const, due: nextWaterDate(p), plant: p },
     { kind: 'FERTILIZE' as const, due: nextFertilizeDate(p), plant: p },
@@ -13,7 +13,7 @@ export function computeTaskLists(plants: Plant[]) {
   const today = allTasks.filter((t) => isDueOrOverdue(t.due))
 
   const next = allTasks
-    .filter((t) => isWithinNextDays(t.due, 7))
+    .filter((t) => isWithinNextDays(t.due, daysAhead))
     .sort((a, b) => a.due.getTime() - b.due.getTime())
 
   const grouped = next.reduce<Record<string, Task[]>>((acc, t) => {

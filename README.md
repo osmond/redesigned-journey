@@ -13,7 +13,11 @@ Photo uploads to Cloudflare R2 (presigned PUT)
 
 Weather snapshot defaults (optional lat/lon)
 
+
 Daily email reminders for due tasks
+
+Full backup/restore via JSON and CSV care event import
+
 
 Quick start
 1) Prereqs

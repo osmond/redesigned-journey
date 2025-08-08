@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
         plantId,
         objectKey: key,
         url,
+        thumbUrl: url,
         contentType: file.type || undefined,
       },
     });
