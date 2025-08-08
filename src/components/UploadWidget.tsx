@@ -97,8 +97,7 @@ export default function UploadWidget({ plantId }: Props) {
       />
       <button
         type="button"
-        aria-label="Upload photos"
-        className="rounded bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 text-sm disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="rounded bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 text-sm disabled:opacity-50"
         onClick={pick}
         disabled={uploading}
       >
@@ -135,37 +134,25 @@ export default function UploadWidget({ plantId }: Props) {
 
   async function handleFile(file: File, onProgress: (p: number) => void) {
     // 1) Resize + auto-rotate using createImageBitmap + canvas
-    // resize original to a max of 800px
     const { blob, width, height, outType } = await resize(file, {
-      max: 800,
+      max: 1600,
       quality: 0.85,
     });
-    // generate a smaller thumbnail (200px)
-    const thumb = await resize(file, { max: 200, quality: 0.7 });
 
     // 2) Create object key & presign
     const ext = outType === 'image/png' ? 'png' : 'jpg';
-    const baseKey = `plants/${plantId}/${Date.now()}-${crypto.randomUUID()}`;
-    const objectKey = `${baseKey}.${ext}`;
-    const thumbKey = `${baseKey}-thumb.${ext}`;
+    const objectKey = `plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const presign = await fetch('/api/uploads/presign', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ objectKey, contentType: outType }),
     }).then((r) => r.json());
-    if (!presign?.uploadUrl) throw new Error(presign?.error ?? 'presign failed');
 
-    const presignThumb = await fetch('/api/uploads/presign', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ objectKey: thumbKey, contentType: outType }),
-    }).then((r) => r.json());
-    if (!presignThumb?.uploadUrl) throw new Error(presignThumb?.error ?? 'presign failed');
+    if (!presign?.uploadUrl) throw new Error(presign?.error ?? 'presign failed');
 
     // 3) Upload with XHR so we can show progress
     await xhrPut(presign.uploadUrl, blob, outType, onProgress);
-    await xhrPut(presignThumb.uploadUrl, thumb.blob, outType, () => {});
 
     // 4) Save Photo row
     const create = await fetch('/api/photos', {
@@ -178,9 +165,6 @@ export default function UploadWidget({ plantId }: Props) {
         contentType: outType,
         width,
         height,
-        thumbnailUrl: presignThumb.publicUrl,
-        thumbnailWidth: thumb.width,
-        thumbnailHeight: thumb.height,
       }),
     }).then((r) => r.json());
 
