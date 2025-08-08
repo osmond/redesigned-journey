@@ -11,6 +11,8 @@ datasource db {
 model Room {
   id        String   @id @default(cuid())
   name      String
+  // custom ordering for drag-and-drop UI
+  sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   plants    Plant[]
 }
@@ -53,6 +55,10 @@ model Photo {
   plantId     String
   objectKey   String   @unique
   url         String
+  // thumbnail version of the image used in grids
+  thumbnailUrl     String?
+  thumbnailWidth   Int?
+  thumbnailHeight  Int?
   contentType String?
   width       Int?
   height      Int?

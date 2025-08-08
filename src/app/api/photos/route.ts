@@ -8,10 +8,23 @@ export const runtime = 'nodejs';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { plantId, objectKey, url, contentType, width, height } = body;
+    const {
+      plantId,
+      objectKey,
+      url,
+      contentType,
+      width,
+      height,
+      thumbnailUrl,
+      thumbnailWidth,
+      thumbnailHeight,
+    } = body;
 
     if (!plantId || !objectKey || !url) {
-      return NextResponse.json({ error: 'plantId, objectKey, and url are required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'plantId, objectKey, and url are required' },
+        { status: 400 }
+      );
     }
 
     const photo = await prisma.photo.create({
@@ -22,6 +35,9 @@ export async function POST(req: NextRequest) {
         contentType: contentType || undefined,
         width: width ?? undefined,
         height: height ?? undefined,
+        thumbnailUrl: thumbnailUrl ?? undefined,
+        thumbnailWidth: thumbnailWidth ?? undefined,
+        thumbnailHeight: thumbnailHeight ?? undefined,
       },
     });
 
