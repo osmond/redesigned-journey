@@ -6,7 +6,7 @@ async function main() {
   const living = await prisma.room.upsert({
     where: { id: 'seed-living' },
     update: {},
-    create: { id: 'seed-living', name: 'Living Room' },
+    create: { id: 'seed-living', name: 'Living Room', sortOrder: 0 },
   });
 
   // Plants
