@@ -7,6 +7,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export default async function PlantDetail({ params }: { params: { id: string } }) {
   const cookieStore = cookies()

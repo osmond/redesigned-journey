@@ -16,6 +16,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 type SuggestItem = { id?: string; name: string; description?: string }
 
 async function wfoSuggest(prefix: string): Promise<SuggestItem[]> {

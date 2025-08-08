@@ -17,6 +17,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 const schema = z.object({
   plantId: z.string().min(1),
   type: z.enum(['WATER', 'FERTILIZE', 'PRUNE', 'REPOT', 'NOTE']),

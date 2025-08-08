@@ -17,6 +17,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 const bodySchema = z.object({
   name: z.string().min(1),
   species: z.string().optional().nullable(),       // scientific name

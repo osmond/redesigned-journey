@@ -16,6 +16,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 export async function GET() {
   const userId = await getUserId()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

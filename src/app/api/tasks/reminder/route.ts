@@ -18,6 +18,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 export const dynamic = 'force-dynamic'
 
 // Vercel Cron to email daily task digest

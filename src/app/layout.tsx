@@ -1,5 +1,5 @@
 import './globals.css'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 
 import ServiceWorkerRegistration from '../components/ServiceWorkerRegistration'
@@ -13,11 +13,14 @@ export const metadata: Metadata = {
   title: 'Plant Care (Local Dev)',
   description: 'No-cloud local dev build',
   manifest: '/manifest.json',
-  themeColor: '#16a34a',
   icons: {
     icon: '/icon-192x192.png',
     apple: '/icon-192x192.png'
   }
+}
+
+export const viewport: Viewport = {
+  themeColor: '#16a34a'
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

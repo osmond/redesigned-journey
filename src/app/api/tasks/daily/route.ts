@@ -17,6 +17,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 export const dynamic = 'force-dynamic'
 
 // Endpoint for Vercel Cron (~7 AM) to compute daily task lists

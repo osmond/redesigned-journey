@@ -16,6 +16,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 function parseCsv(text: string) {
   const lines = text.trim().split(/\r?\n/)
   const headers = lines[0].split(',')

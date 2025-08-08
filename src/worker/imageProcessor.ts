@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import type { ImageJob } from '@/lib/imageQueue';
 
 const connection = {
-  connection: { url: process.env.REDIS_URL || 'redis://localhost:6379' },
+  connection: { url: process.env.REDIS_URL || 'redis://localhost:6379' } as any,
 };
 
 new Worker<ImageJob>(
@@ -64,5 +64,5 @@ new Worker<ImageJob>(
       },
     });
   },
-  connection
+  connection as any
 );

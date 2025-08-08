@@ -19,6 +19,8 @@ async function getUserId() {
   return session?.user.id ?? null
 }
 
+export const runtime = 'nodejs'
+
 const patchSchema = z.object({
   name: z.string().optional(),
   species: z.string().nullable().optional(),
