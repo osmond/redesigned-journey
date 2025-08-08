@@ -37,9 +37,9 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
         {cover ? (
           <Image
             alt={plant.name}
-            src={cover.thumbnailUrl || cover.url}
-            width={cover.thumbnailWidth ?? cover.width ?? 800}
-            height={cover.thumbnailHeight ?? cover.height ?? 600}
+            src={cover.url}
+            width={cover.width ?? 800}
+            height={cover.height ?? 600}
             className="h-full w-full object-cover"
             priority={false}
           />
@@ -54,17 +54,14 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
             <div key={p.id} className="relative group">
               <Image
                 alt="thumb"
-                src={p.thumbnailUrl || p.url}
-                width={p.thumbnailWidth ?? p.width ?? 400}
-                height={p.thumbnailHeight ?? p.height ?? 300}
+                src={p.url}
+                width={p.width ?? 400}
+                height={p.height ?? 300}
                 className="h-24 w-full object-cover rounded border border-slate-800"
               />
               <div className="absolute inset-0 hidden group-hover:flex items-end justify-between p-1 bg-black/30 rounded">
                 <button
-                  aria-label={
-                    plant.coverPhotoId === p.id ? 'Cover photo' : 'Set as cover photo'
-                  }
-                  className={`text-[11px] px-2 py-0.5 rounded focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                  className={`text-[11px] px-2 py-0.5 rounded ${
                     plant.coverPhotoId === p.id ? 'bg-emerald-600' : 'bg-slate-700 hover:bg-slate-600'
                   } text-white`}
                   onClick={async () => {
@@ -80,8 +77,7 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
                 </button>
 
                 <button
-                  aria-label="Delete photo"
-                  className="text-[11px] px-2 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="text-[11px] px-2 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white"
                   onClick={async () => {
                     await fetch(`/api/photos/${p.id}`, { method: 'DELETE' });
                     router.refresh();
