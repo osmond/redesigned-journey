@@ -57,3 +57,15 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE() {
+  const userId = await getUserId()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  await prisma.$transaction([
+    prisma.careEvent.deleteMany({ where: { userId } }),
+    prisma.photo.deleteMany({ where: { userId } }),
+    prisma.plant.deleteMany({ where: { userId } }),
+    prisma.room.deleteMany({ where: { userId } }),
+  ])
+  return NextResponse.json({ ok: true })
+}
