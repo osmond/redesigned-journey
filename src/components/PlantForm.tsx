@@ -23,6 +23,7 @@ export default function PlantForm() {
   const [noMatches, setNoMatches] = useState(false)
   const [selectedSpecies, setSelectedSpecies] = useState<{ scientific?: string, common?: string, wfoId?: string } | null>(null)
   const [hints, setHints] = useState<Hints['suggestions'] | null>(null)
+  const [noHintMatches, setNoHintMatches] = useState(false)
   const [pending, setPending] = useState(false)
   const [waterInterval, setWaterInterval] = useState(7)
   const [fertInterval, setFertInterval] = useState(30)
@@ -36,6 +37,7 @@ export default function PlantForm() {
   }, 250), [])
 
   async function getHints() {
+    setNoHintMatches(false)
     const form = new FormData(document.getElementById('plant-form') as HTMLFormElement)
     if (!selectedSpecies?.scientific && !(form.get('species') as string)) {
       alert('Please enter a species first')
@@ -50,10 +52,17 @@ export default function PlantForm() {
       potMaterial: (form.get('potMaterial') as string) || undefined,
     }
     const j = await fetch('/api/species/hints', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r=>r.json())
-    setHints(j.suggestions)
-    if (j.suggestions) {
-      setWaterInterval(j.suggestions.wateringIntervalDays)
-      setFertInterval(j.suggestions.fertilizingIntervalDays)
+    if (j?.suggestions) {
+      setHints(j.suggestions)
+      if (typeof j.suggestions.wateringIntervalDays === 'number') {
+        setWaterInterval(j.suggestions.wateringIntervalDays)
+      }
+      if (typeof j.suggestions.fertilizingIntervalDays === 'number') {
+        setFertInterval(j.suggestions.fertilizingIntervalDays)
+      }
+    } else {
+      setHints(null)
+      setNoHintMatches(true)
     }
   }
 
@@ -164,6 +173,9 @@ export default function PlantForm() {
             <li>Fertilize every {hints.fertilizingIntervalDays} days ({hints.fertilizerStrengthHint})</li>
           </ul>
         </div>
+      )}
+      {noHintMatches && !hints && (
+        <div className="sm:col-span-2 text-sm text-slate-600 dark:text-slate-300">No matches</div>
       )}
 
       <div className="sm:col-span-2"><label className="label">Notes</label><textarea className="input" name="notes" rows={3} /></div>
