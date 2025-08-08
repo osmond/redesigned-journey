@@ -20,18 +20,27 @@ export default function PlantForm() {
   // basic form state (uncontrolled inputs + embellishments)
   const [speciesQuery, setSpeciesQuery] = useState('')
   const [speciesResults, setSpeciesResults] = useState<Suggest[]>([])
+  const [noMatches, setNoMatches] = useState(false)
   const [selectedSpecies, setSelectedSpecies] = useState<{ scientific?: string, common?: string, wfoId?: string } | null>(null)
   const [hints, setHints] = useState<Hints['suggestions'] | null>(null)
   const [pending, setPending] = useState(false)
+  const [waterInterval, setWaterInterval] = useState(7)
+  const [fertInterval, setFertInterval] = useState(30)
 
   const fetchSuggestions = useMemo(() => debounce(async (q: string) => {
-    if (!q || q.length < 2) { setSpeciesResults([]); return }
+    if (!q || q.length < 2) { setSpeciesResults([]); setNoMatches(false); return }
     const j = await fetch(`/api/species/search?q=${encodeURIComponent(q)}`).then(r=>r.json())
-    setSpeciesResults(j.result || [])
+    const res = j.result || []
+    setSpeciesResults(res)
+    setNoMatches(res.length === 0)
   }, 250), [])
 
   async function getHints() {
     const form = new FormData(document.getElementById('plant-form') as HTMLFormElement)
+    if (!selectedSpecies?.scientific && !(form.get('species') as string)) {
+      alert('Please enter a species first')
+      return
+    }
     const body = {
       scientificName: (selectedSpecies?.scientific || (form.get('species') as string) || '') || undefined,
       commonName: form.get('commonName') || undefined,
@@ -42,6 +51,10 @@ export default function PlantForm() {
     }
     const j = await fetch('/api/species/hints', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r=>r.json())
     setHints(j.suggestions)
+    if (j.suggestions) {
+      setWaterInterval(j.suggestions.wateringIntervalDays)
+      setFertInterval(j.suggestions.fertilizingIntervalDays)
+    }
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -50,8 +63,6 @@ export default function PlantForm() {
 
     // If we have hints and user wants them, merge
     if ((e.nativeEvent as any).submitter?.value === 'apply-suggestions' && hints) {
-      data['wateringIntervalDays'] = String(hints.wateringIntervalDays)
-      data['fertilizingIntervalDays'] = String(hints.fertilizingIntervalDays)
       if (hints.waterMl) data['recommendedWaterMl'] = String(hints.waterMl)
     }
 
@@ -95,6 +106,9 @@ export default function PlantForm() {
             ))}
           </div>
         )}
+        {noMatches && speciesResults.length === 0 && speciesQuery.length >= 2 && (
+          <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 text-sm">No matches</div>
+        )}
         {selectedSpecies?.scientific ? (
           <div className="mt-1 text-xs text-slate-500">Selected: {selectedSpecies.scientific}</div>
         ) : null}
@@ -129,6 +143,9 @@ export default function PlantForm() {
           <option value="CERAMIC">Ceramic/glazed</option>
         </select>
       </div>
+
+      <div><label className="label">Water every (days)</label><input className="input" name="wateringIntervalDays" type="number" min="1" value={waterInterval} onChange={e=>setWaterInterval(Number(e.target.value))} /></div>
+      <div><label className="label">Fertilize every (days)</label><input className="input" name="fertilizingIntervalDays" type="number" min="1" value={fertInterval} onChange={e=>setFertInterval(Number(e.target.value))} /></div>
 
       <div className="sm:col-span-2 flex gap-2">
         <button type="button" className="btn" onClick={getHints}>Get suggestions</button>

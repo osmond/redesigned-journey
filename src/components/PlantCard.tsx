@@ -4,6 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import UploadWidget from './UploadWidget';
+import CareButtons from './CareButtons';
 import type { Photo, Plant } from '@prisma/client';
 
 type PlantWithPhotos = Plant & { photos: Photo[] };
@@ -20,8 +21,14 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
     <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 space-y-3">
       <div className="flex items-baseline justify-between">
         <div>
-          <div className="font-medium">{plant.name}</div>
-          {plant.commonName && <div className="text-xs text-slate-400">{plant.commonName}</div>}
+          <div className="font-medium">
+            <a href={`/plants/${plant.id}`} className="hover:underline">
+              {plant.name}
+            </a>
+          </div>
+          {plant.commonName && (
+            <div className="text-xs text-slate-400">{plant.commonName}</div>
+          )}
         </div>
         <UploadWidget plantId={plant.id} />
       </div>
@@ -83,6 +90,8 @@ export default function PlantCard({ plant }: { plant: PlantWithPhotos }) {
           ))}
         </div>
       )}
+
+      <CareButtons plantId={plant.id} />
     </div>
   );
 }
