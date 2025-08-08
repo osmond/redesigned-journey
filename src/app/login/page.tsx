@@ -7,12 +7,30 @@ import { supabaseClient } from '@/lib/supabaseClient'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const router = useRouter()
   const [supabase] = useState(() => supabaseClient())
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await supabase.auth.signInWithPassword({ email, password })
+    setErrorMessage(null)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setErrorMessage(error.message)
+      return
+    }
+    router.push('/')
+    router.refresh()
+  }
+
+  const handleSignUp = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    setErrorMessage(null)
+    const { error } = await supabase.auth.signUp({ email, password })
+    if (error) {
+      setErrorMessage(error.message)
+      return
+    }
     router.push('/')
     router.refresh()
   }
@@ -35,8 +53,12 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         <button className="border p-2" type="submit">
           Sign In
+        </button>
+        <button className="border p-2" type="button" onClick={handleSignUp}>
+          Sign Up
         </button>
       </form>
     </div>
