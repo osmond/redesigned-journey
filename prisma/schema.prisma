@@ -76,6 +76,16 @@ model CareEvent {
   createdAt DateTime @default(now())
 }
 
+model ShareLink {
+  id           String   @id @default(cuid())
+  plantId      String?
+  plant        Plant?   @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  roomId       String?
+  room         Room?    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  passwordHash String?
+  createdAt    DateTime @default(now())
+}
+
 model Species {
   id             String   @id @default(cuid())
   scientificName String   @unique
