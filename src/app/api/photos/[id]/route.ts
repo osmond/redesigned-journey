@@ -10,9 +10,11 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     const photo = await prisma.photo.findUnique({ where: { id: params.id } });
     if (!photo) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
-    // delete blob in R2
+    // delete blobs in R2 (full + thumb)
+    const thumbKey = photo.objectKey.replace(/\.[^.]+$/, (m) => `-thumb${m}`);
     try {
       await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: photo.objectKey }));
+      await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: thumbKey }));
     } catch (e) {
       console.warn('R2 delete warning (continuing):', e);
     }
