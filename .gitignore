@@ -1,0 +1,18 @@
+# deps & build
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+
+# env & local stuff
+.env
+.env.local
+.env.*.local
+dev.db
+.prisma/
+.vercel/
+.DS_Store
+
+# keep the example
+!.env.example

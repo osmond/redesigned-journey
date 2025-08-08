@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  plants    Plant[]
+}
+
+model Plant {
+  id           String  @id @default(cuid())
+  name         String
+  species      String?
+  commonName   String?
+  speciesWfoId String?
+  roomId       String?
+  room         Room?   @relation(fields: [roomId], references: [id])
+
+  lightLevel         LightLevel?
+  potDiameterCm      Float?
+  potHeightCm        Float?
+  potMaterial        PotMaterial?
+  recommendedWaterMl Int?
+
+  wateringIntervalDays    Int       @default(7)
+  fertilizingIntervalDays Int       @default(30)
+  lastWateredAt           DateTime?
+  lastFertilizedAt        DateTime?
+  latitude                Float?
+  longitude               Float?
+  notes                   String?
+
+  // NEW: which photo should be used as the cover in cards
+  coverPhotoId String?
+
+  photos    Photo[]
+  events    CareEvent[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Photo {
+  id          String   @id @default(cuid())
+  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  plantId     String
+  objectKey   String   @unique
+  url         String
+  contentType String?
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+}
+
+model CareEvent {
+  id        String   @id @default(cuid())
+  plant     Plant    @relation(fields: [plantId], references: [id])
+  plantId   String
+  type      CareType
+  amountMl  Int?
+  note      String?
+  tempC     Float?
+  humidity  Float?
+  precipMm  Float?
+  lat       Float?
+  lon       Float?
+  createdAt DateTime @default(now())
+}
+
+model Species {
+  id             String   @id @default(cuid())
+  scientificName String   @unique
+  commonName     String?
+  family         String?
+  wfoId          String?
+  gbifKey        Int?
+  rank           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum CareType {
+  WATER
+  FERTILIZE
+  PRUNE
+  REPOT
+  NOTE
+}
+
+enum LightLevel {
+  LOW
+  MEDIUM
+  BRIGHT_INDIRECT
+  FULL_SUN
+}
+
+enum PotMaterial {
+  CLAY
+  PLASTIC
+  CERAMIC
+}
