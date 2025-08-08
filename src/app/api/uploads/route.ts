@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         objectKey: key,
         url,
         thumbUrl: url,
-        contentType: file.type || undefined,
+        contentType: file.type || null,
       },
     });
 

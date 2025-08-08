@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         objectKey,
         url,
         thumbUrl,
-        contentType: contentType || undefined,
+        contentType: contentType || null,
         width: width ?? undefined,
         height: height ?? undefined,
       },
