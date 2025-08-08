@@ -12,7 +12,8 @@
     "postinstall": "prisma generate",
     "test": "node --import tsx --test tests/access.test.ts",
     "worker": "node --import tsx src/worker/imageProcessor.ts",
-    "report:monthly": "node --import tsx scripts/exportMonthlyReport.ts"
+    "report:monthly": "node --import tsx scripts/exportMonthlyReport.ts",
+    "backup:verify": "node --import tsx scripts/verifyBackup.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.863.0",
