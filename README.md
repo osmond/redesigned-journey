@@ -13,6 +13,8 @@ Photo uploads to Cloudflare R2 (presigned PUT)
 
 Weather snapshot defaults (optional lat/lon)
 
+Daily email reminders for due tasks
+
 Quick start
 1) Prereqs
 Node 18+ (or 20+)
@@ -55,6 +57,14 @@ TREFLE_TOKEN=""
 # Optional: default lat/lon for weather snapshots
 DEFAULT_LAT="44.9778"
 DEFAULT_LON="-93.2650"
+
+# Optional: email reminders
+SMTP_HOST="smtp.example.com"
+SMTP_PORT="587"
+SMTP_USER="username"
+SMTP_PASS="password"
+EMAIL_FROM="plantcare@example.com"
+EMAIL_TO="you@example.com"
 Tip: keep .env.example updated for collaborators.
 
 4) Database
