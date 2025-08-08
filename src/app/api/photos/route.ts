@@ -1,29 +1,33 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
-export async function POST(req: Request) {
+// optional: list photos or create from a JSON payload if you're not doing direct upload in /api/uploads
+
+export async function POST(req: NextRequest) {
   try {
-    const { plantId, objectKey, url, contentType, width, height } = await req.json();
+    const body = await req.json();
+    const { plantId, objectKey, url, contentType, width, height } = body;
 
     if (!plantId || !objectKey || !url) {
-      return NextResponse.json({ error: 'plantId, objectKey, url are required' }, { status: 400 });
+      return NextResponse.json({ error: 'plantId, objectKey, and url are required' }, { status: 400 });
     }
 
     const photo = await prisma.photo.create({
-      data: { plantId, objectKey, url, contentType, width, height },
+      data: {
+        plantId,
+        objectKey,
+        url,
+        contentType: contentType || undefined,
+        width: width ?? undefined,
+        height: height ?? undefined,
+      },
     });
 
-    // If plant has no cover yet, set this one
-    const plant = await prisma.plant.findUnique({ where: { id: plantId }, select: { coverPhotoId: true } });
-    if (!plant?.coverPhotoId) {
-      await prisma.plant.update({ where: { id: plantId }, data: { coverPhotoId: photo.id } });
-    }
-
-    return NextResponse.json({ photo });
-  } catch (e: any) {
-    console.error('create photo error', e);
-    return NextResponse.json({ error: e?.message ?? 'failed' }, { status: 500 });
+    return NextResponse.json({ ok: true, photo }, { status: 200 });
+  } catch (err: any) {
+    console.error(err);
+    return NextResponse.json({ error: err?.message || 'Failed' }, { status: 500 });
   }
 }
