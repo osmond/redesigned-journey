@@ -23,7 +23,7 @@ Quick start
 1) Prereqs
 Node 18+ (or 20+)
 
-Supabase project (Postgres) – use the pooler connection
+Supabase project (Postgres + Auth). In the dashboard, note the Project URL, anon key, and service role key from **Settings ➜ API**.
 
 Cloudflare account with an R2 bucket and API Token (Account-scoped)
 
@@ -43,6 +43,11 @@ Edit
 # Supabase Postgres (use Connect ➜ Pooler ➜ "session" or "transaction")
 DATABASE_URL="postgresql://postgres.<your-project-ref>:<YOUR_PASSWORD>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require"
 DIRECT_URL="postgresql://postgres.<your-project-ref>:<YOUR_PASSWORD>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require"
+
+# Supabase Auth (Settings ➜ API)
+NEXT_PUBLIC_SUPABASE_URL="https://<your-project-ref>.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<your_anon_key>"
+SUPABASE_SERVICE_ROLE_KEY="<your_service_role_key>"
 
 # Cloudflare R2 (S3 API)
 R2_ACCOUNT_ID="<your_account_id>"
@@ -75,7 +80,9 @@ Tip: keep .env.example updated for collaborators.
 bash
 Copy
 Edit
+# Regenerate Prisma client after schema updates (e.g., adding userId columns)
 npx prisma generate
+# Push the updated schema to your database
 npm run db:push       # creates tables
 npm run seed         # (optional) seed sample data
 Open Prisma Studio (optional):
@@ -89,7 +96,7 @@ bash
 Copy
 Edit
 npm run dev
-# http://localhost:3000
+# http://localhost:3000 (create an account via Supabase Auth when the app starts)
 Cloudflare R2 setup
 Create bucket (e.g., plant-care).
 
