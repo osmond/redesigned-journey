@@ -10,14 +10,19 @@ datasource db {
 
 model Room {
   id        String   @id @default(cuid())
+  userId    String
   name      String
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   plants    Plant[]
+  shareLinks ShareLink[]
+
+  @@index([userId])
 }
 
 model Plant {
   id           String  @id @default(cuid())
+  userId       String
   name         String
   species      String?
   commonName   String?
@@ -44,12 +49,16 @@ model Plant {
 
   photos    Photo[]
   events    CareEvent[]
+  shareLinks ShareLink[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([userId])
 }
 
 model Photo {
   id          String   @id @default(cuid())
+  userId      String
   plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
   plantId     String
   objectKey   String   @unique
@@ -59,10 +68,13 @@ model Photo {
   width       Int?
   height      Int?
   createdAt   DateTime @default(now())
+
+  @@index([userId])
 }
 
 model CareEvent {
   id        String   @id @default(cuid())
+  userId    String
   plant     Plant    @relation(fields: [plantId], references: [id])
   plantId   String
   type      CareType
@@ -74,6 +86,19 @@ model CareEvent {
   lat       Float?
   lon       Float?
   createdAt DateTime @default(now())
+  userName  String?
+
+  @@index([userId])
+}
+
+model ShareLink {
+  id           String   @id @default(cuid())
+  plantId      String?
+  plant        Plant?   @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  roomId       String?
+  room         Room?    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  passwordHash String?
+  createdAt    DateTime @default(now())
 }
 
 model Species {

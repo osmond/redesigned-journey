@@ -3,10 +3,11 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Rooms
+  const userId = 'seed-user';
   const living = await prisma.room.upsert({
     where: { id: 'seed-living' },
-    update: {},
-    create: { id: 'seed-living', name: 'Living Room', sortOrder: 0 },
+    update: { userId },
+    create: { id: 'seed-living', userId, name: 'Living Room', sortOrder: 0 },
   });
 
   // Plants
@@ -17,6 +18,7 @@ async function main() {
     data: [
       {
         id: 'seed-monstera',
+        userId,
         name: 'Monstera',
         commonName: 'Swiss Cheese Plant',
         roomId: living.id,
@@ -28,6 +30,7 @@ async function main() {
       },
       {
         id: 'seed-snake',
+        userId,
         name: 'Sansevieria trifasciata',
         commonName: 'Snake Plant',
         roomId: living.id,

@@ -4,6 +4,7 @@ node_modules/
 dist/
 coverage/
 *.log
+tsconfig.tsbuildinfo
 
 # env & local stuff
 .env

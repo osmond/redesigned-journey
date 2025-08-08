@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { computeTaskLists } from '@/lib/tasks'
+import { sendTaskDigest } from '@/lib/email'
 import { getSessionUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-// Endpoint for Vercel Cron (~7 AM) to compute daily task lists
+// Vercel Cron to email daily task digest
 export async function GET() {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -13,6 +14,9 @@ export async function GET() {
     where: { userId: user.id },
     orderBy: { createdAt: 'desc' },
   })
-  const lists = computeTaskLists(plants)
-  return NextResponse.json(lists)
+  const { today } = computeTaskLists(plants)
+  if (today.length > 0) {
+    await sendTaskDigest(today)
+  }
+  return NextResponse.json({ sent: today.length })
 }

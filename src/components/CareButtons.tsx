@@ -23,10 +23,17 @@ export default function CareButtons({ plantId }: { plantId: string }) {
       if (!n) return
       note = n
     }
+    let userName = localStorage.getItem('userName') || undefined
+    if (!userName) {
+      const u = window.prompt('Your name?')
+      if (!u) return
+      userName = u
+      localStorage.setItem('userName', userName)
+    }
     await fetch('/api/care-events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plantId, type, note }),
+      body: JSON.stringify({ plantId, type, note, userName }),
     })
     router.refresh()
   }
