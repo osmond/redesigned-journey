@@ -7,6 +7,11 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = req.headers.get('x-user-id');
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { plantId, objectKey, url, thumbUrl, contentType, width, height } = body;
 
@@ -17,13 +22,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } });
+    if (!plant) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
+
     const photo = await prisma.photo.create({
       data: {
         plantId,
+        userId,
         objectKey,
         url,
         thumbUrl,
-        contentType: contentType || undefined,
+        contentType: contentType || null,
         width: width ?? undefined,
         height: height ?? undefined,
       },

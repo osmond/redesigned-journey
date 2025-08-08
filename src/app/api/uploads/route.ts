@@ -20,13 +20,18 @@ export async function POST(req: NextRequest) {
     const form = await req.formData();
     const file = form.get('file') as File | null;
     const plantId = form.get('plantId') as string | null;
+    const userId = req.headers.get('x-user-id');
+    if (!file || !plantId || !userId) {
+      return NextResponse.json({ error: 'file, plantId, and user' }, { status: 400 });
+    }
 
-    if (!file || !plantId) {
-      return NextResponse.json({ error: 'file and plantId are required' }, { status: 400 });
+    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } });
+    if (!plant) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
     }
 
     const ext = file.name.split('.').pop() || 'jpg';
-    const key = `plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const key = `users/${userId}/plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const arrayBuf = await file.arrayBuffer();
 
@@ -51,10 +56,11 @@ export async function POST(req: NextRequest) {
     const photo = await prisma.photo.create({
       data: {
         plantId,
+        userId,
         objectKey: key,
         url,
         thumbUrl: url,
-        contentType: file.type || undefined,
+        contentType: file.type || null,
       },
     });
 
