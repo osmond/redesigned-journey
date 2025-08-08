@@ -3,11 +3,31 @@ import TaskRow from '@/components/TaskRow'
 import { format } from 'date-fns'
 import { computeTaskLists } from '@/lib/tasks'
 import TaskCalendar from '@/components/TaskCalendar'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+      },
+    }
+  )
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) redirect('/login')
+  const userId = session.user.id
+
   const plants = await prisma.plant.findMany({
+    where: { userId },
     orderBy: { createdAt: 'desc' },
   })
 
