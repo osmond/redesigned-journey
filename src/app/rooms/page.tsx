@@ -22,7 +22,11 @@ export default async function RoomsPage() {
   if (!session) redirect('/login')
   const userId = session.user.id
 
-  const rooms = await prisma.room.findMany({ where: { userId }, include: { plants: true }, orderBy: { sortOrder: 'asc' } })
+  const rooms = await prisma.room.findMany({
+    where: { plants: { some: { userId } } },
+    include: { plants: { where: { userId } } },
+    orderBy: { sortOrder: 'asc' },
+  })
   return (
     <div className="space-y-6">
       <section className="card"><h2 className="text-lg font-semibold mb-4">Add a room</h2><RoomForm /></section>
