@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
-const schema = z.object({ plantId: z.string().min(1), type: z.enum(['WATER','FERTILIZE']), amountMl: z.number().int().positive().optional(), note: z.string().optional() })
+const schema = z.object({
+  plantId: z.string().min(1),
+  type: z.enum(['WATER', 'FERTILIZE', 'PRUNE', 'REPOT', 'NOTE']),
+  amountMl: z.number().int().positive().optional(),
+  note: z.string().optional(),
+})
 
 async function fetchWeather(lat: number, lon: number) {
   const url = new URL('https://api.open-meteo.com/v1/forecast')
@@ -19,6 +24,9 @@ async function fetchWeather(lat: number, lon: number) {
 export async function POST(req: Request) {
   const json = await req.json(); const parsed = schema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+
+  if (parsed.data.type === 'NOTE' && !parsed.data.note)
+    return NextResponse.json({ error: 'note required' }, { status: 400 })
 
   const plant = await prisma.plant.findUnique({ where: { id: parsed.data.plantId } })
   if (!plant) return NextResponse.json({ error: 'Plant not found' }, { status: 404 })

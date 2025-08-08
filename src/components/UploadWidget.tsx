@@ -16,8 +16,15 @@ type Item = {
 
 export default function UploadWidget({ plantId }: Props) {
   const [items, setItems] = React.useState<Item[]>([]);
+  const [uploading, setUploading] = React.useState(false);
+  const [toast, setToast] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const pick = () => inputRef.current?.click();
 
@@ -25,15 +32,31 @@ export default function UploadWidget({ plantId }: Props) {
     const files = e.target.files;
     if (!files?.length) return;
 
-    const list: Item[] = Array.from(files).map((f) => ({
-      name: f.name,
-      progress: 0,
-      status: 'queued',
-    }));
-    setItems(list);
+    const valid: File[] = [];
+    const list: Item[] = [];
+    Array.from(files).forEach((f) => {
+      if (!f.type.startsWith('image/')) {
+        showToast('Unsupported file type');
+        return;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        showToast('File too large (max 5MB)');
+        return;
+      }
+      valid.push(f);
+      list.push({ name: f.name, progress: 0, status: 'queued' });
+    });
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    if (valid.length === 0) {
+      e.target.value = '';
+      return;
+    }
+
+    setItems(list);
+    setUploading(true);
+
+    for (let i = 0; i < valid.length; i++) {
+      const file = valid[i];
       try {
         await handleFile(file, (p) => {
           setItems((prev) => {
@@ -53,9 +76,11 @@ export default function UploadWidget({ plantId }: Props) {
           copy[i] = { ...copy[i], status: 'error', error: err?.message ?? 'upload failed' };
           return copy;
         });
+        showToast(err?.message ?? 'Upload failed');
       }
     }
 
+    setUploading(false);
     router.refresh(); // show new photos
     e.target.value = ''; // reset
   }
@@ -72,10 +97,11 @@ export default function UploadWidget({ plantId }: Props) {
       />
       <button
         type="button"
-        className="rounded bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 text-sm"
+        className="rounded bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 text-sm disabled:opacity-50"
         onClick={pick}
+        disabled={uploading}
       >
-        Upload photos
+        {uploading ? 'Uploading…' : 'Upload photos'}
       </button>
 
       {items.length > 0 && (
@@ -95,6 +121,12 @@ export default function UploadWidget({ plantId }: Props) {
               {it.status === 'error' && <div className="text-red-400">{it.error}</div>}
             </div>
           ))}
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-4 right-4 bg-red-600 text-white px-3 py-2 rounded">
+          {toast}
         </div>
       )}
     </div>

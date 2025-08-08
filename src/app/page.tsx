@@ -1,48 +1,18 @@
 import { prisma } from '@/lib/db'
-import {
-  nextWaterDate,
-  nextFertilizeDate,
-  isDueOrOverdue,
-  isWithinNextDays,
-} from '@/lib/schedule'
-import SwipeTaskRow from '@/components/SwipeTaskRow'
+import TaskRow from '@/components/TaskRow'
 import { format } from 'date-fns'
-import type { Plant } from '@prisma/client'
+import { computeTaskLists, Task } from '@/lib/tasks'
 
 export const dynamic = 'force-dynamic'
-
-type Task = {
-  kind: 'WATER' | 'FERTILIZE'
-  due: Date
-  plant: Plant
-}
 
 export default async function Page() {
   const plants = await prisma.plant.findMany({
     orderBy: { createdAt: 'desc' },
   })
 
-  const allTasks: Task[] = plants.flatMap((p) => [
-    { kind: 'WATER' as const, due: nextWaterDate(p), plant: p },
-    { kind: 'FERTILIZE' as const, due: nextFertilizeDate(p), plant: p },
-  ])
+  const { today: due, grouped: groups, groupKeys } = computeTaskLists(plants)
 
-  const due = allTasks.filter((t) => isDueOrOverdue(t.due))
-
-  const upcoming = allTasks
-    .filter((t) => isWithinNextDays(t.due, 7))
-    .sort((a, b) => a.due.getTime() - b.due.getTime())
-
-  // group upcoming by yyyy-MM-dd
-  const groups = upcoming.reduce<Record<string, Task[]>>((acc, t) => {
-    const key = format(t.due, 'yyyy-MM-dd')
-    ;(acc[key] ??= []).push(t)
-    return acc
-  }, {})
-
-  const groupKeys = Object.keys(groups).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime(),
-  )
+  const upcoming = Object.values(groups).flat()
 
   return (
     <div className="space-y-6">
@@ -52,9 +22,9 @@ export default async function Page() {
           <p>Nothing due today. Your plants are happy 🌞</p>
         ) : (
           <ul className="divide-y divide-slate-200 dark:divide-slate-800">
-            {due.map((t) => (
-              <SwipeTaskRow key={`${t.kind}-${t.plant.id}`} task={t} />
-            ))}
+              {due.map((t) => (
+                <TaskRow key={`${t.kind}-${t.plant.id}`} task={t} />
+              ))}
           </ul>
         )}
       </section>
@@ -72,11 +42,7 @@ export default async function Page() {
                 </div>
                 <ul className="divide-y divide-slate-200 dark:divide-slate-800">
                   {groups[k].map((t) => (
-                    <SwipeTaskRow
-                      key={`${k}-${t.kind}-${t.plant.id}`}
-                      task={t}
-                      readOnly
-                    />
+                      <TaskRow key={`${k}-${t.kind}-${t.plant.id}`} task={t} />
                   ))}
                 </ul>
               </div>
