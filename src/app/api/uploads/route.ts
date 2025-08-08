@@ -60,8 +60,11 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         objectKey: key,
         url,
+
+        // TODO: generate a separate thumbnail URL; use main URL for now
         thumbUrl: url,
-        contentType: file.type || null,
+        contentType: file.type || undefined,
+
       },
     });
 
