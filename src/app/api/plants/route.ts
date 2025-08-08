@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { getUser } from '@/lib/auth'
 
 const bodySchema = z.object({
   name: z.string().min(1),
@@ -21,11 +22,18 @@ const bodySchema = z.object({
 })
 
 export async function GET() {
-  const plants = await prisma.plant.findMany({ orderBy: { createdAt: 'desc' } })
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const plants = await prisma.plant.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+  })
   return NextResponse.json(plants)
 }
 
 export async function POST(req: Request) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const json = await req.json()
   const parsed = bodySchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
@@ -33,6 +41,7 @@ export async function POST(req: Request) {
 
   const p = await prisma.plant.create({
     data: {
+      userId: user.id,
       name: d.name,
       species: d.species || null,
       commonName: d.commonName || null,

@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import { suggestWaterMl, baselineIntervalDays, adjustIntervalDays, fertilizerIntervalDays } from '@/lib/estimation'
 import { LightLevel, PotMaterial } from '@prisma/client'
+import { getUser } from '@/lib/auth'
 
 export async function POST(req: Request) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json().catch(() => ({}))
   const {
     scientificName,

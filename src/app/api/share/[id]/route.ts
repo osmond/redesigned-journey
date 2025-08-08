@@ -1,17 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createHash } from 'crypto';
+import { getUser } from '@/lib/auth';
 
 interface Params {
   params: { id: string };
 }
 
 export async function GET(req: Request, { params }: Params) {
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = params;
   const password = new URL(req.url).searchParams.get('password') ?? undefined;
 
   const link = await prisma.shareLink.findUnique({
-    where: { id },
+    where: { id, userId: user.id },
     include: {
       plant: { include: { photos: true, events: true } },
       room: { include: { plants: { include: { photos: true, events: true } } } },

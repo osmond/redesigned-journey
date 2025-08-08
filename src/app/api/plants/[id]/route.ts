@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { getUser } from '@/lib/auth'
 
 const patchSchema = z.object({
   name: z.string().optional(),
@@ -23,16 +24,27 @@ const patchSchema = z.object({
 })
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const plant = await prisma.plant.findUnique({ where: { id: params.id, userId: user.id } })
+  if (!plant) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const json = await req.json()
   const parsed = patchSchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-  const updated = await prisma.plant.update({ where: { id: params.id }, data: parsed.data })
+  const updated = await prisma.plant.update({
+    where: { id: params.id, userId: user.id },
+    data: { ...parsed.data, userId: user.id },
+  })
   return NextResponse.json(updated)
 }
 
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  await prisma.photo.deleteMany({ where: { plantId: params.id } })
-  await prisma.careEvent.deleteMany({ where: { plantId: params.id } })
-  await prisma.plant.delete({ where: { id: params.id } })
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const plant = await prisma.plant.findUnique({ where: { id: params.id, userId: user.id } })
+  if (!plant) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  await prisma.photo.deleteMany({ where: { plantId: params.id, userId: user.id } })
+  await prisma.careEvent.deleteMany({ where: { plantId: params.id, userId: user.id } })
+  await prisma.plant.delete({ where: { id: params.id, userId: user.id } })
   return NextResponse.json({ ok: true })
 }

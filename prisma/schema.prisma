@@ -10,14 +10,17 @@ datasource db {
 
 model Room {
   id        String   @id @default(cuid())
+  userId    String
   name      String
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   plants    Plant[]
+  shareLinks ShareLink[]
 }
 
 model Plant {
   id           String  @id @default(cuid())
+  userId       String
   name         String
   species      String?
   commonName   String?
@@ -44,12 +47,14 @@ model Plant {
 
   photos    Photo[]
   events    CareEvent[]
+  shareLinks ShareLink[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }
 
 model Photo {
   id          String   @id @default(cuid())
+  userId      String
   plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
   plantId     String
   objectKey   String   @unique
@@ -63,6 +68,7 @@ model Photo {
 
 model CareEvent {
   id        String   @id @default(cuid())
+  userId    String
   plant     Plant    @relation(fields: [plantId], references: [id])
   plantId   String
   type      CareType
@@ -79,6 +85,7 @@ model CareEvent {
 
 model ShareLink {
   id           String   @id @default(cuid())
+  userId       String
   plantId      String?
   plant        Plant?   @relation(fields: [plantId], references: [id], onDelete: Cascade)
   roomId       String?
@@ -89,7 +96,8 @@ model ShareLink {
 
 model Species {
   id             String   @id @default(cuid())
-  scientificName String   @unique
+  userId         String
+  scientificName String
   commonName     String?
   family         String?
   wfoId          String?
@@ -97,6 +105,8 @@ model Species {
   rank           String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@unique([userId, scientificName])
 }
 
 enum CareType {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getUser } from '@/lib/auth'
 
 type SuggestItem = { id?: string; name: string; description?: string }
 
@@ -26,13 +27,15 @@ async function gbifSuggest(q: string): Promise<SuggestItem[]> {
 }
 
 export async function GET(req: Request) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ result: [] }, { status: 401 })
   const { searchParams } = new URL(req.url)
   const q = (searchParams.get('q') || '').trim()
   if (!q) return NextResponse.json({ result: [] })
 
   // quick cache by prefix
   const cached = await prisma.species.findMany({
-    where: { scientificName: { startsWith: q, mode: 'insensitive' } },
+    where: { userId: user.id, scientificName: { startsWith: q, mode: 'insensitive' } },
     take: 8,
   })
   let items: SuggestItem[] = cached.map((s) => ({ id: s.wfoId || String(s.gbifKey) || s.id, name: s.scientificName, description: s.commonName || s.family || undefined }))
