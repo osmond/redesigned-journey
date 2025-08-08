@@ -17,6 +17,8 @@ async function getUserId() {
   return session?.user.id ?? null;
 }
 
+export const runtime = 'nodejs';
+
 interface Params {
   params: { id: string };
 }
