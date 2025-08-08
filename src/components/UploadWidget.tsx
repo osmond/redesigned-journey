@@ -95,6 +95,7 @@ export default function UploadWidget({ plantId }: Props) {
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png"
+        capture="environment"
         multiple
         hidden
         onChange={onPick}
@@ -182,8 +183,9 @@ export default function UploadWidget({ plantId }: Props) {
   );
 
   async function handleFile(file: File, onProgress: (p: number) => void) {
+    const processed = await processImage(file);
     const form = new FormData();
-    form.append('file', file);
+    form.append('file', processed);
     form.append('plantId', plantId);
 
     await new Promise<void>((resolve, reject) => {
@@ -204,5 +206,39 @@ export default function UploadWidget({ plantId }: Props) {
       xhr.open('POST', '/api/uploads');
       xhr.send(form);
     });
+  }
+
+  async function processImage(file: File): Promise<File> {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' as any });
+      const size = Math.min(bitmap.width, bitmap.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return file;
+      ctx.drawImage(
+        bitmap,
+        (bitmap.width - size) / 2,
+        (bitmap.height - size) / 2,
+        size,
+        size,
+        0,
+        0,
+        size,
+        size
+      );
+      return await new Promise<File>((resolve) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          resolve(new File([blob], file.name, { type: file.type }));
+        }, file.type);
+      });
+    } catch {
+      return file;
+    }
   }
 }

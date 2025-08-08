@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 
 import ServiceWorkerRegistration from '../components/ServiceWorkerRegistration'
+import InstallPrompt from '@/components/InstallPrompt'
+import CareEventQueueProvider from '@/components/CareEventQueueProvider'
 
 import { SupabaseProvider } from '@/components/supabase-provider'
 import AuthButton from '@/components/auth-button'
@@ -42,6 +44,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </header>
         <main className="container py-6">{children}</main>
         <ServiceWorkerRegistration />
+        <InstallPrompt />
+        <CareEventQueueProvider />
 
         <SupabaseProvider initialSession={session}>
           <header className="border-b border-slate-200 dark:border-slate-800">
