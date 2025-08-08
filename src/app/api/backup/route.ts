@@ -1,11 +1,15 @@
 import { prisma } from '@/lib/db'
+import { NextResponse } from 'next/server'
+import { getSessionUser } from '@/lib/auth'
 
 export async function GET() {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const [rooms, plants, photos, careEvents, species] = await Promise.all([
-    prisma.room.findMany(),
-    prisma.plant.findMany(),
-    prisma.photo.findMany(),
-    prisma.careEvent.findMany(),
+    prisma.room.findMany({ where: { userId: user.id } as any }),
+    prisma.plant.findMany({ where: { userId: user.id } }),
+    prisma.photo.findMany({ where: { userId: user.id } }),
+    prisma.careEvent.findMany({ where: { plant: { userId: user.id } } }),
     prisma.species.findMany(),
   ])
 
@@ -20,22 +24,22 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const data = await req.json()
 
   await prisma.$transaction([
-    prisma.careEvent.deleteMany(),
-    prisma.photo.deleteMany(),
-    prisma.plant.deleteMany(),
-    prisma.room.deleteMany(),
-    prisma.species.deleteMany(),
+    prisma.careEvent.deleteMany({ where: { plant: { userId: user.id } } }),
+    prisma.photo.deleteMany({ where: { userId: user.id } }),
+    prisma.plant.deleteMany({ where: { userId: user.id } }),
+    prisma.room.deleteMany({ where: { userId: user.id } as any }),
   ])
 
-  if (data.species?.length) await prisma.species.createMany({ data: data.species })
-  if (data.rooms?.length) await prisma.room.createMany({ data: data.rooms })
-  if (data.plants?.length) await prisma.plant.createMany({ data: data.plants })
-  if (data.photos?.length) await prisma.photo.createMany({ data: data.photos })
+  if (data.rooms?.length) await prisma.room.createMany({ data: data.rooms.map((r: any) => ({ ...r, userId: user.id })) })
+  if (data.plants?.length) await prisma.plant.createMany({ data: data.plants.map((p: any) => ({ ...p, userId: user.id })) })
+  if (data.photos?.length) await prisma.photo.createMany({ data: data.photos.map((p: any) => ({ ...p, userId: user.id })) })
   if (data.careEvents?.length)
-    await prisma.careEvent.createMany({ data: data.careEvents })
+    await prisma.careEvent.createMany({ data: data.careEvents.map((e: any) => ({ ...e })) })
 
-  return Response.json({ ok: true })
+  return NextResponse.json({ ok: true })
 }
