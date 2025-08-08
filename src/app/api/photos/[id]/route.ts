@@ -29,8 +29,10 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const photo = await prisma.photo.findFirst({ where: { id: params.id, userId } });
-    if (!photo) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    const photo = await prisma.photo.findUnique({ where: { id: params.id } });
+    if (!photo || photo.userId !== userId) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
 
     // delete blobs in R2 (full + thumb)
     const thumbKey = photo.objectKey.replace(/\.[^.]+$/, (m) => `-thumb${m}`);
@@ -71,8 +73,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const { action } = await req.json();
     if (action !== 'cover') return NextResponse.json({ error: 'unsupported action' }, { status: 400 });
 
-    const photo = await prisma.photo.findFirst({ where: { id: params.id, userId } });
-    if (!photo) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    const photo = await prisma.photo.findUnique({ where: { id: params.id } });
+    if (!photo || photo.userId !== userId) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
 
     await prisma.plant.update({ where: { id: photo.plantId, userId }, data: { coverPhotoId: photo.id, userId } });
 

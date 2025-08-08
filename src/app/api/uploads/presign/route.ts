@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { r2, R2_BUCKET, PUBLIC_HOST } from '@/lib/r2';
+import { prisma } from '@/lib/db';
+import { randomUUID } from 'crypto';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -24,11 +26,15 @@ export async function POST(req: Request) {
   try {
     const userId = await getUserId();
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const { objectKey, contentType } = await req.json();
-
-    if (!objectKey || !contentType) {
-      return NextResponse.json({ error: 'objectKey and contentType required' }, { status: 400 });
+    const { plantId, contentType, ext } = await req.json();
+    if (!plantId || !contentType) {
+      return NextResponse.json({ error: 'plantId and contentType required' }, { status: 400 });
     }
+
+    const plant = await prisma.plant.findFirst({ where: { id: plantId, userId } });
+    if (!plant) return NextResponse.json({ error: 'not found' }, { status: 404 });
+
+    const objectKey = `users/${userId}/plants/${plantId}/${randomUUID()}.${(ext || 'jpg').replace(/[^a-zA-Z0-9]/g, '')}`;
 
     const cmd = new PutObjectCommand({
       Bucket: R2_BUCKET,
