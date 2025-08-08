@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getUserFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
 const schema = z.object({ plantId: z.string().min(1), type: z.enum(['WATER','FERTILIZE']), amountMl: z.number().int().positive().optional(), note: z.string().optional() })
@@ -17,11 +18,13 @@ async function fetchWeather(lat: number, lon: number) {
 }
 
 export async function POST(req: Request) {
+  const user = await getUserFromRequest(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const json = await req.json(); const parsed = schema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
   const plant = await prisma.plant.findUnique({ where: { id: parsed.data.plantId } })
-  if (!plant) return NextResponse.json({ error: 'Plant not found' }, { status: 404 })
+  if (!plant || plant.userId !== user.id) return NextResponse.json({ error: 'Plant not found' }, { status: 404 })
 
   const lat = plant.latitude ?? Number(process.env.DEFAULT_LAT)
   const lon = plant.longitude ?? Number(process.env.DEFAULT_LON)
@@ -29,6 +32,7 @@ export async function POST(req: Request) {
   if (!Number.isNaN(lat) && !Number.isNaN(lon)) weather = await fetchWeather(lat, lon)
 
   const event = await prisma.careEvent.create({ data: {
+    userId: user.id,
     plantId: plant.id,
     type: parsed.data.type as any,
     amountMl: parsed.data.amountMl ?? null,

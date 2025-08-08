@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { getUserFromCookies } from '@/lib/auth'
 import {
   nextWaterDate,
   nextFertilizeDate,
@@ -18,7 +19,10 @@ type Task = {
 }
 
 export default async function Page() {
+  const user = await getUserFromCookies()
+  if (!user) return <p className="card">Please sign in</p>
   const plants = await prisma.plant.findMany({
+    where: { userId: user.id },
     orderBy: { createdAt: 'desc' },
   })
 

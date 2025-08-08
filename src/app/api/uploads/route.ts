@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
+import { getUserFromRequest } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +17,9 @@ const s3 = new S3Client({
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getUserFromRequest(req)
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     // Expecting multipart/form-data: file + plantId
     const form = await req.formData();
     const file = form.get('file') as File | null;
@@ -24,6 +28,9 @@ export async function POST(req: NextRequest) {
     if (!file || !plantId) {
       return NextResponse.json({ error: 'file and plantId are required' }, { status: 400 });
     }
+
+    const plant = await prisma.plant.findUnique({ where: { id: plantId } })
+    if (!plant || plant.userId !== user.id) return NextResponse.json({ error: 'Plant not found' }, { status: 404 })
 
     const ext = file.name.split('.').pop() || 'jpg';
     const key = `plants/${plantId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
@@ -50,6 +57,7 @@ export async function POST(req: NextRequest) {
     // save photo row
     const photo = await prisma.photo.create({
       data: {
+        userId: user.id,
         plantId,
         objectKey: key,
         url,

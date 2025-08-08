@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getUserFromRequest } from '@/lib/auth'
 import { z } from 'zod'
 
 const bodySchema = z.object({
@@ -20,19 +21,32 @@ const bodySchema = z.object({
   notes: z.string().optional().nullable(),
 })
 
-export async function GET() {
-  const plants = await prisma.plant.findMany({ orderBy: { createdAt: 'desc' } })
+export async function GET(req: Request) {
+  const user = await getUserFromRequest(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const plants = await prisma.plant.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+  })
   return NextResponse.json(plants)
 }
 
 export async function POST(req: Request) {
+  const user = await getUserFromRequest(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const json = await req.json()
   const parsed = bodySchema.safeParse(json)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   const d = parsed.data
 
+  if (d.roomId) {
+    const room = await prisma.room.findUnique({ where: { id: d.roomId } })
+    if (!room || room.userId !== user.id) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+  }
+
   const p = await prisma.plant.create({
     data: {
+      userId: user.id,
       name: d.name,
       species: d.species || null,
       commonName: d.commonName || null,
